@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Production build
+dist/
+client/dist/
+
+# Logs & environment
+*.log
+.env
+.env.local
+.DS_Store
+.vscode/
