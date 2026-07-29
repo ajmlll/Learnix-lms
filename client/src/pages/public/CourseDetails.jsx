@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Star,
@@ -12,9 +12,14 @@ import {
   PlayCircle,
   Users,
   Globe,
-  Share2,
+  ArrowLeft,
 } from 'lucide-react';
 import courseService from '../../services/courseService';
+import Card from '../../components/common/Card';
+import Button from '../../components/common/Button';
+import Badge from '../../components/common/Badge';
+import Modal from '../../components/common/Modal';
+import { CardSkeleton } from '../../components/common/Skeleton';
 
 export const CourseDetails = () => {
   const { id } = useParams();
@@ -26,7 +31,7 @@ export const CourseDetails = () => {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [activePreviewLesson, setActivePreviewLesson] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchCourse = async () => {
       setIsLoading(true);
       try {
@@ -50,6 +55,38 @@ export const CourseDetails = () => {
     setIsPreviewModalOpen(true);
   };
 
+  if (isLoading) {
+    return (
+      <div className="py-12 px-4 max-w-7xl mx-auto space-y-8 font-sans">
+        <div className="h-8 w-48 bg-gray-200 animate-pulse rounded-md" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <CardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="py-16 text-center space-y-4 max-w-md mx-auto font-sans">
+        <BookOpen className="w-12 h-12 text-gray-400 mx-auto" />
+        <h2 className="text-xl font-bold font-heading text-gray-900">Course Not Found</h2>
+        <p className="text-xs text-gray-500">The requested course could not be located or has been removed.</p>
+        <Button variant="primary" size="md" leftIcon={ArrowLeft} onClick={() => navigate('/courses')}>
+          Back to Course Catalog
+        </Button>
+      </div>
+    );
+  }
+
+  const categoryName = typeof course.category === 'object' ? (course.category?.name || 'General') : (course.category || 'General');
+  const instructorName = typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member');
+  const instructorAvatar = typeof course.instructor === 'object' ? (course.instructor?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250') : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
+
   return (
     <div className="font-sans space-y-12 pb-16">
       
@@ -60,8 +97,8 @@ export const CourseDetails = () => {
             
             {/* Category Breadcrumb & Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="primary" size="sm">{course.category}</Badge>
-              <Badge variant="amber" size="sm">{course.level}</Badge>
+              <Badge variant="primary" size="sm">{categoryName}</Badge>
+              <Badge variant="amber" size="sm">{course.level || 'All Levels'}</Badge>
               {course.isBestseller && <Badge variant="success" size="sm">BESTSELLER</Badge>}
             </div>
 
@@ -70,20 +107,20 @@ export const CourseDetails = () => {
             </h1>
 
             <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
-              {course.subtitle}
+              {course.subtitle || course.description}
             </p>
 
             {/* Rating & Stats row */}
             <div className="flex flex-wrap items-center gap-4 text-xs pt-2 text-slate-300">
               <div className="flex items-center gap-1.5 font-bold font-mono text-amber-400">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span>{course.rating}</span>
-                <span className="text-slate-400 font-normal">({course.reviewCount} ratings)</span>
+                <span>{course.rating || 5.0}</span>
+                <span className="text-slate-400 font-normal">({course.reviewCount || 0} ratings)</span>
               </div>
               <span>•</span>
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4 text-indigo-400" />
-                <span>{course.studentsEnrolled?.toLocaleString()} Students</span>
+                <span>{(course.studentsEnrolled || 0).toLocaleString()} Students</span>
               </div>
               <span>•</span>
               <div className="flex items-center gap-1">
@@ -95,13 +132,13 @@ export const CourseDetails = () => {
             {/* Instructor snippet */}
             <div className="flex items-center gap-3 pt-4 border-t border-slate-800">
               <img
-                src={course.instructor.avatar}
-                alt={course.instructor.name}
+                src={instructorAvatar}
+                alt={instructorName}
                 className="w-10 h-10 rounded-full object-cover border border-slate-700"
               />
               <div>
                 <p className="text-xs text-slate-400">Created by</p>
-                <p className="text-sm font-bold text-white font-heading">{course.instructor.name}</p>
+                <p className="text-sm font-bold text-white font-heading">{instructorName}</p>
               </div>
             </div>
 
@@ -120,7 +157,10 @@ export const CourseDetails = () => {
             <Card className="p-6 space-y-4 bg-[#F8F9FC]">
               <h2 className="text-lg font-bold font-heading text-gray-900">What You'll Learn</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {course.learningPoints?.map((point, idx) => (
+                {(course.learningPoints || [
+                  'Master Production Architecture & Code Standards',
+                  'Build Full-Stack Applications with Real-time APIs',
+                ]).map((point, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-xs text-gray-700">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>{point}</span>
@@ -135,63 +175,69 @@ export const CourseDetails = () => {
                 <div>
                   <h2 className="text-xl font-bold font-heading text-gray-900">Course Content</h2>
                   <p className="text-xs text-gray-500">
-                    {course.curriculum?.length || 3} modules • {course.lecturesCount || 120} lectures • {course.duration} total length
+                    {course.curriculum?.length || 0} modules • {course.lecturesCount || 12} lectures
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3 border border-gray-200 rounded-[12px] overflow-hidden bg-white">
-                {course.curriculum?.map((module, index) => {
-                  const isOpen = openModuleIndex === index;
-                  return (
-                    <div key={index} className="border-b border-gray-100 last:border-0">
-                      <button
-                        onClick={() => toggleModule(index)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50/70 hover:bg-gray-100/70 transition-colors text-left cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          {isOpen ? (
-                            <ChevronUp className="w-4 h-4 text-indigo-600" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
-                          )}
-                          <span className="text-xs font-bold font-heading text-gray-900">
-                            {module.moduleTitle}
-                          </span>
-                        </div>
-                        <span className="text-[11px] font-mono text-gray-500">{module.duration}</span>
-                      </button>
+              {(course.curriculum || []).length > 0 ? (
+                <div className="space-y-3 border border-gray-200 rounded-[12px] overflow-hidden bg-white">
+                  {course.curriculum.map((module, index) => {
+                    const isOpen = openModuleIndex === index;
+                    return (
+                      <div key={index} className="border-b border-gray-100 last:border-0">
+                        <button
+                          onClick={() => toggleModule(index)}
+                          className="w-full flex items-center justify-between p-4 bg-gray-50/70 hover:bg-gray-100/70 transition-colors text-left cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            {isOpen ? (
+                              <ChevronUp className="w-4 h-4 text-indigo-600" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            )}
+                            <span className="text-xs font-bold font-heading text-gray-900">
+                              {module.moduleTitle}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono text-gray-500">{module.duration}</span>
+                        </button>
 
-                      {isOpen && (
-                        <div className="p-3 bg-white space-y-2">
-                          {module.lessons?.map((lesson, lIdx) => (
-                            <div
-                              key={lIdx}
-                              className="flex items-center justify-between p-2 rounded-md hover:bg-indigo-50/40 text-xs transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <PlayCircle className="w-4 h-4 text-indigo-500" />
-                                <span className="font-medium text-gray-800">{lesson.title}</span>
+                        {isOpen && (
+                          <div className="p-3 bg-white space-y-2">
+                            {module.lessons?.map((lesson, lIdx) => (
+                              <div
+                                key={lIdx}
+                                className="flex items-center justify-between p-2 rounded-md hover:bg-indigo-50/40 text-xs transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <PlayCircle className="w-4 h-4 text-indigo-500" />
+                                  <span className="font-medium text-gray-800">{lesson.title}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  {lesson.isPreview && (
+                                    <button
+                                      onClick={() => handleOpenPreview(lesson)}
+                                      className="text-[11px] font-bold text-[#4F46E5] underline cursor-pointer"
+                                    >
+                                      Preview Video
+                                    </button>
+                                  )}
+                                  <span className="font-mono text-[11px] text-gray-400">{lesson.duration}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                {lesson.isPreview && (
-                                  <button
-                                    onClick={() => handleOpenPreview(lesson)}
-                                    className="text-[11px] font-bold text-[#4F46E5] underline cursor-pointer"
-                                  >
-                                    Preview Video
-                                  </button>
-                                )}
-                                <span className="font-mono text-[11px] text-gray-400">{lesson.duration}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <Card className="p-6 text-center text-xs text-gray-500">
+                  Curriculum modules are being finalized by the instructor.
+                </Card>
+              )}
             </div>
 
             {/* Instructor Bio */}
@@ -199,43 +245,19 @@ export const CourseDetails = () => {
               <h2 className="text-lg font-bold font-heading text-gray-900">Meet Your Instructor</h2>
               <div className="flex items-start gap-4">
                 <img
-                  src={course.instructor.avatar}
-                  alt={course.instructor.name}
+                  src={instructorAvatar}
+                  alt={instructorName}
                   className="w-16 h-16 rounded-full object-cover border-2 border-indigo-100"
                 />
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold font-heading text-gray-900">{course.instructor.name}</h3>
-                  <p className="text-xs text-[#4F46E5] font-semibold">{course.instructor.role}</p>
-                  <p className="text-xs text-gray-600 leading-relaxed pt-1">{course.instructor.bio}</p>
+                  <h3 className="text-base font-bold font-heading text-gray-900">{instructorName}</h3>
+                  <p className="text-xs text-[#4F46E5] font-semibold">Faculty Specialist</p>
+                  <p className="text-xs text-gray-600 leading-relaxed pt-1">
+                    {course.instructor?.bio || 'Experienced engineering instructor dedicated to building hands-on curriculum.'}
+                  </p>
                 </div>
               </div>
             </Card>
-
-            {/* Reviews Section */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold font-heading text-gray-900">Student Reviews</h2>
-              <div className="space-y-3">
-                {course.reviews?.map((review) => (
-                  <Card key={review.id} className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <img src={review.avatar} alt={review.user} className="w-8 h-8 rounded-full object-cover" />
-                        <div>
-                          <p className="text-xs font-bold text-gray-900">{review.user}</p>
-                          <p className="text-[10px] text-gray-400">{review.date}</p>
-                        </div>
-                      </div>
-                      <div className="flex text-amber-400">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-600 italic">"{review.comment}"</p>
-                  </Card>
-                ))}
-              </div>
-            </div>
 
           </div>
 
@@ -245,25 +267,23 @@ export const CourseDetails = () => {
               <Card className="p-6 space-y-6 shadow-soft-lg border-2 border-indigo-100">
                 {/* Thumbnail Preview */}
                 <div className="relative h-44 rounded-[8px] overflow-hidden group cursor-pointer" onClick={() => setIsPreviewModalOpen(true)}>
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                  <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600'} alt={course.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center group-hover:bg-gray-900/50 transition-colors">
                     <div className="w-12 h-12 rounded-full bg-white text-[#4F46E5] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       <PlayCircle className="w-8 h-8" />
                     </div>
                   </div>
-                  <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-gray-900/80 px-2 py-0.5 rounded">
-                    Preview Course
-                  </span>
                 </div>
 
                 {/* Price */}
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold font-mono text-gray-900">${course.price}</span>
-                    <span className="text-sm text-gray-400 line-through font-mono">${course.originalPrice}</span>
-                    <Badge variant="amber" size="sm">40% OFF</Badge>
+                    <span className="text-3xl font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
+                    {course.originalPrice > 0 && (
+                      <span className="text-sm text-gray-400 line-through font-mono">₹{course.originalPrice}</span>
+                    )}
+                    <Badge variant="amber" size="sm">SPECIAL OFFER</Badge>
                   </div>
-                  <p className="text-[11px] text-red-500 font-semibold">🔥 Sale ends in 2 days!</p>
                 </div>
 
                 {/* Buttons */}
@@ -271,7 +291,7 @@ export const CourseDetails = () => {
                   <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/student/my-learning')}>
                     Enroll Now
                   </Button>
-                  <Button variant="outline" size="md" fullWidth>
+                  <Button variant="outline" size="md" fullWidth onClick={() => navigate('/student/wishlist')}>
                     Add to Wishlist
                   </Button>
                 </div>
@@ -282,7 +302,7 @@ export const CourseDetails = () => {
                   <ul className="space-y-1.5 text-xs">
                     <li className="flex items-center gap-2">
                       <Clock className="w-3.5 h-3.5 text-[#4F46E5]" />
-                      <span>{course.duration} on-demand video</span>
+                      <span>On-demand video lectures</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <BookOpen className="w-3.5 h-3.5 text-[#4F46E5]" />
