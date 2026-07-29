@@ -11,7 +11,7 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// Request Interceptor: Attach JWT Token
+// Request Interceptor: Attach JWT Token from localStorage
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('learnix_token');
@@ -25,16 +25,15 @@ api.interceptors.request.use(
   }
 );
 
-// Response Interceptor: Global Error Handling
+// Response Interceptor: Global Error Handling & 401 Auto-logout
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const message = error.response?.data?.message || error.message || 'Something went wrong';
-    
+
     if (error.response?.status === 401) {
       localStorage.removeItem('learnix_token');
       localStorage.removeItem('learnix_user');
-      // Dispatch custom event for auth reset if needed
       window.dispatchEvent(new Event('learnix:unauthorized'));
     } else if (error.response?.status >= 500) {
       toast.error('Server error. Please try again later.');

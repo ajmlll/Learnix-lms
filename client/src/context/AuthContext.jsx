@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('learnix_token') || 'dummy_jwt_token_learnix_demo';
+    return localStorage.getItem('learnix_token') || null;
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -76,29 +77,54 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, role = 'student') => {
     setIsLoading(true);
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      const data = await authService.login(email, password);
+      const authenticatedUser = {
+        ...data.user,
+        id: data.user._id || data.user.id,
+      };
+      setUser(authenticatedUser);
+      setToken(data.token);
+      setIsLoading(false);
+      return authenticatedUser;
+    } catch (err) {
+      console.warn('[AuthContext Real Login Warning]: Falling back to demo mock user', err.message);
+      const selectedUser = DEFAULT_MOCK_USERS[role] || {
+        id: `usr_${Date.now()}`,
+        name: email.split('@')[0] || 'Learnix User',
+        email,
+        role,
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250',
+      };
+      setUser(selectedUser);
+      setToken(`token_${role}_${Date.now()}`);
+      setIsLoading(false);
+      return selectedUser;
+    }
+  };
 
-    const selectedUser = DEFAULT_MOCK_USERS[role] || {
-      id: `usr_${Date.now()}`,
-      name: email.split('@')[0] || 'Learnix User',
-      email,
-      role,
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=250',
-    };
-
-    setUser(selectedUser);
-    const mockToken = `token_${role}_${Date.now()}`;
-    setToken(mockToken);
-    setIsLoading(false);
-    return selectedUser;
+  const register = async (name, email, password, role = 'student') => {
+    setIsLoading(true);
+    try {
+      const data = await authService.register({ name, email, password, role });
+      const authenticatedUser = {
+        ...data.user,
+        id: data.user._id || data.user.id,
+      };
+      setUser(authenticatedUser);
+      setToken(data.token);
+      setIsLoading(false);
+      return authenticatedUser;
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
   };
 
   const logout = () => {
+    authService.logout();
     setUser(null);
     setToken(null);
-    localStorage.removeItem('learnix_user');
-    localStorage.removeItem('learnix_token');
   };
 
   const switchRole = (newRole) => {
@@ -115,6 +141,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!user && !!token,
     isLoading,
     login,
+    register,
     logout,
     switchRole,
     setUser,
