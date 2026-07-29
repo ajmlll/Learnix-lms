@@ -1,4 +1,12 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Force DNS servers to Google & Cloudflare public DNS to fix Windows querySrv ECONNREFUSED issues
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  console.warn('[DNS Config Warning]:', e.message);
+}
 
 const connectDB = async () => {
   try {
@@ -9,7 +17,6 @@ const connectDB = async () => {
     console.log(`[MongoDB] Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`[MongoDB Connection Error]: ${error.message}`);
-    // Do not exit process immediately so server can attempt recovery or stay alive for debugging
   }
 };
 
