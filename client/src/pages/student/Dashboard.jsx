@@ -50,7 +50,6 @@ export const Dashboard = () => {
     };
     fetchEnrolled();
   }, []);
-  }, []);
 
   if (isLoading) {
     return (

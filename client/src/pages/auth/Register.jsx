@@ -66,12 +66,6 @@ export const Register = () => {
     }
   };
 
-    await login(email, password, role);
-    toast.success(`Welcome to Learnix! Account created as ${role.toUpperCase()}.`);
-    setIsSubmitting(false);
-    navigate(`/${role}/dashboard`, { replace: true });
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FC] font-sans">
       <div className="w-full max-w-md space-y-6">

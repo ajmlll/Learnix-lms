@@ -69,11 +69,6 @@ export const ManageCourses = () => {
       toast.error(err.message || 'Failed to reject course');
     }
   };
-      prev.map((c) => (c.id === reviewCourse.id ? { ...c, status: 'draft' } : c))
-    );
-    setIsReviewModalOpen(false);
-    toast.warn(`⚠️ Course "${reviewCourse.title}" sent back to instructor for revisions.`);
-  };
 
   const getStatusBadge = (status) => {
     if (status === 'published') return <Badge variant="success" size="sm">PUBLISHED</Badge>;
