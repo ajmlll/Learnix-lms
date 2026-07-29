@@ -17,13 +17,14 @@ import {
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
 import { upload } from '../middleware/upload.js';
+import { cacheMiddleware } from '../middleware/cache.js';
 
 const router = express.Router();
 
-// Public course listing & creation
+// Public course listing with 300s cache
 router
   .route('/')
-  .get(getCourses)
+  .get(cacheMiddleware('courses_list', 300), getCourses)
   .post(protect, authorize('instructor', 'admin'), upload.single('thumbnail'), createCourse);
 
 // Instructor own courses
@@ -34,10 +35,10 @@ router.get(
   getMyCourses
 );
 
-// Course detail, update, delete
+// Single course detail with 600s cache
 router
   .route('/:id')
-  .get(getCourseById)
+  .get(cacheMiddleware('course_detail', 600), getCourseById)
   .put(protect, authorize('instructor', 'admin'), upload.single('thumbnail'), updateCourse)
   .delete(protect, authorize('instructor', 'admin'), deleteCourse);
 

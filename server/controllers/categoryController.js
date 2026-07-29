@@ -1,4 +1,5 @@
 import Category from '../models/Category.js';
+import { invalidateCategoryCache } from '../utils/cacheInvalidation.js';
 
 const slugify = (text) => {
   return text
@@ -41,6 +42,9 @@ export const createCategory = async (req, res, next) => {
       name,
       slug,
     });
+
+    // Invalidate cache
+    await invalidateCategoryCache();
 
     res.status(201).json({
       success: true,
@@ -119,6 +123,9 @@ export const updateCategory = async (req, res, next) => {
 
     await category.save();
 
+    // Invalidate cache
+    await invalidateCategoryCache();
+
     res.status(200).json({
       success: true,
       data: category,
@@ -143,6 +150,9 @@ export const deleteCategory = async (req, res, next) => {
     }
 
     await category.deleteOne();
+
+    // Invalidate cache
+    await invalidateCategoryCache();
 
     res.status(200).json({
       success: true,

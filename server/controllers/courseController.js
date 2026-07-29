@@ -1,5 +1,8 @@
 import Course from '../models/Course.js';
 import Category from '../models/Category.js';
+import { invalidateCourseCache } from '../utils/cacheInvalidation.js';
+
+// TODO: When reviewController is created in a later step, call invalidateCourseCache(courseId) in review creation/updates
 
 const slugify = (text) => {
   return (
@@ -29,7 +32,6 @@ export const createCourse = async (req, res, next) => {
       });
     }
 
-    // Verify category exists
     const categoryExists = await Category.findById(category);
     if (!categoryExists) {
       return res.status(404).json({
@@ -54,6 +56,8 @@ export const createCourse = async (req, res, next) => {
       isPublished: false,
     });
 
+    await invalidateCourseCache(course._id);
+
     res.status(201).json({
       success: true,
       data: course,
@@ -69,27 +73,23 @@ export const createCourse = async (req, res, next) => {
 export const getCourses = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 12, 50); // Capped at 50 max
+    const limit = Math.min(parseInt(req.query.limit, 10) || 12, 50);
     const skip = (page - 1) * limit;
 
     const query = { isPublished: true };
 
-    // Search filter (Text index)
     if (req.query.search) {
       query.$text = { $search: req.query.search };
     }
 
-    // Category filter
     if (req.query.category) {
       query.category = req.query.category;
     }
 
-    // Level filter
     if (req.query.level) {
       query.level = req.query.level;
     }
 
-    // Price range filter
     if (req.query.minPrice !== undefined || req.query.maxPrice !== undefined) {
       query.price = {};
       if (req.query.minPrice !== undefined) query.price.$gte = Number(req.query.minPrice);
@@ -99,13 +99,13 @@ export const getCourses = async (req, res, next) => {
     const total = await Course.countDocuments(query);
 
     const courses = await Course.find(query)
-      .select('-sections') // Exclude heavy embedded sections array
+      .select('-sections')
       .populate('instructor', 'name avatar bio')
       .populate('category', 'name slug')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .lean(); // Performance optimization
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -160,7 +160,6 @@ export const updateCourse = async (req, res, next) => {
       });
     }
 
-    // Check ownership unless admin
     if (course.instructor.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -176,6 +175,8 @@ export const updateCourse = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
+
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -208,6 +209,7 @@ export const deleteCourse = async (req, res, next) => {
     }
 
     await course.deleteOne();
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -248,6 +250,7 @@ export const publishCourse = async (req, res, next) => {
     }
 
     await course.save();
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -297,9 +300,6 @@ export const getMyCourses = async (req, res, next) => {
 // EMBEDDED SECTIONS CONTROLLERS
 // ==========================================
 
-// @desc    Add section to course
-// @route   POST /api/courses/:id/sections
-// @access  Private (Instructor owner/Admin)
 export const addSection = async (req, res, next) => {
   try {
     const { title, order } = req.body;
@@ -335,6 +335,8 @@ export const addSection = async (req, res, next) => {
     course.sections.push(newSection);
     await course.save();
 
+    await invalidateCourseCache(req.params.id);
+
     res.status(201).json({
       success: true,
       data: course.sections,
@@ -344,9 +346,6 @@ export const addSection = async (req, res, next) => {
   }
 };
 
-// @desc    Update section in course
-// @route   PUT /api/courses/:id/sections/:sectionId
-// @access  Private (Instructor owner/Admin)
 export const updateSection = async (req, res, next) => {
   try {
     const { title, order } = req.body;
@@ -378,6 +377,7 @@ export const updateSection = async (req, res, next) => {
     if (order !== undefined) section.order = order;
 
     await course.save();
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -388,9 +388,6 @@ export const updateSection = async (req, res, next) => {
   }
 };
 
-// @desc    Delete section from course
-// @route   DELETE /api/courses/:id/sections/:sectionId
-// @access  Private (Instructor owner/Admin)
 export const deleteSection = async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -419,6 +416,8 @@ export const deleteSection = async (req, res, next) => {
     section.deleteOne();
     await course.save();
 
+    await invalidateCourseCache(req.params.id);
+
     res.status(200).json({
       success: true,
       message: 'Section removed successfully.',
@@ -432,9 +431,6 @@ export const deleteSection = async (req, res, next) => {
 // EMBEDDED LECTURES CONTROLLERS
 // ==========================================
 
-// @desc    Add lecture to section (with Cloudinary upload)
-// @route   POST /api/courses/:id/sections/:sectionId/lectures
-// @access  Private (Instructor owner/Admin)
 export const addLecture = async (req, res, next) => {
   try {
     const { title, duration, order, isPreview, videoUrl } = req.body;
@@ -469,7 +465,6 @@ export const addLecture = async (req, res, next) => {
       });
     }
 
-    // Determine final video URL (uploaded file or provided URL)
     const finalVideoUrl = req.file ? req.file.path : videoUrl || '';
 
     const newLecture = {
@@ -484,6 +479,8 @@ export const addLecture = async (req, res, next) => {
     section.lectures.push(newLecture);
     await course.save();
 
+    await invalidateCourseCache(req.params.id);
+
     res.status(201).json({
       success: true,
       data: section.lectures,
@@ -493,9 +490,6 @@ export const addLecture = async (req, res, next) => {
   }
 };
 
-// @desc    Update lecture in section
-// @route   PUT /api/courses/:id/sections/:sectionId/lectures/:lectureId
-// @access  Private (Instructor owner/Admin)
 export const updateLecture = async (req, res, next) => {
   try {
     const { title, duration, order, isPreview, videoUrl } = req.body;
@@ -542,6 +536,7 @@ export const updateLecture = async (req, res, next) => {
     }
 
     await course.save();
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -552,9 +547,6 @@ export const updateLecture = async (req, res, next) => {
   }
 };
 
-// @desc    Delete lecture from section
-// @route   DELETE /api/courses/:id/sections/:sectionId/lectures/:lectureId
-// @access  Private (Instructor owner/Admin)
 export const deleteLecture = async (req, res, next) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -590,6 +582,8 @@ export const deleteLecture = async (req, res, next) => {
 
     lecture.deleteOne();
     await course.save();
+
+    await invalidateCourseCache(req.params.id);
 
     res.status(200).json({
       success: true,
