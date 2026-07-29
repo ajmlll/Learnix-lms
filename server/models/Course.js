@@ -109,6 +109,10 @@ const courseSchema = new mongoose.Schema(
       enum: ['draft', 'pending', 'published'],
       default: 'draft',
     },
+    reviewNotes: {
+      type: String,
+      default: '',
+    },
     sections: [sectionSchema],
     enrolledCount: {
       type: Number,

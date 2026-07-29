@@ -21,6 +21,7 @@ import codeExecutionRoutes from './routes/codeExecutionRoutes.js';
 import liveClassRoutes from './routes/liveClassRoutes.js';
 import discussionRoutes from './routes/discussionRoutes.js';
 import certificateRoutes from './routes/certificateRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 import { handleWebhook } from './controllers/paymentController.js';
 
@@ -62,6 +63,7 @@ app.use('/api/code', codeExecutionRoutes);
 app.use('/api/live-classes', liveClassRoutes);
 app.use('/api/discussions', discussionRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
