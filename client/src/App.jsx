@@ -116,7 +116,6 @@ export function App() {
           
           {/* AI Tools & Code Sandbox */}
           <Route path="/student/ai-notes" element={<AINotes />} />
-          <Route path="/student/ai-[#AIQuiz]" element={<AIQuiz />} />
           <Route path="/student/ai-quiz" element={<AIQuiz />} />
           <Route path="/student/playground" element={<CodingPlayground />} />
           
