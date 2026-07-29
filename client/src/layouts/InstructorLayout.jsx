@@ -71,14 +71,7 @@ export const InstructorLayout = () => {
 
         {/* Header Right */}
         <div className="flex items-center gap-3 sm:gap-4">
-          <button
-            onClick={() => switchRole('student')}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-indigo-50 hover:text-[#4F46E5] rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400"
-          >
-            Switch to Student
-          </button>
-
-          <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+          <div className="flex items-center gap-2">
             <img
               src={user?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=250'}
               alt={`${user?.name || 'Instructor'} profile photo`}

@@ -97,13 +97,6 @@ export const StudentLayout = () => {
             </div>
           </NavLink>
 
-          <button
-            onClick={() => switchRole('instructor')}
-            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-indigo-50 hover:text-[#4F46E5] rounded-lg transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400"
-          >
-            Switch to Instructor
-          </button>
-
           <NavLink
             to="/student/profile"
             className="flex items-center gap-2 pl-2 border-l border-gray-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
