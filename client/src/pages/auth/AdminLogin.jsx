@@ -67,7 +67,7 @@ export const AdminLogin = () => {
     }
   };
 
-  // Credentials submission -> direct to verifying -> dashboard
+  // Credentials submission -> REST API login -> verifying -> dashboard
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
     if (isLocked) return;
@@ -79,22 +79,23 @@ export const AdminLogin = () => {
     }
 
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 400));
-
-    // Demo: accept admin@learnix.edu / password123
-    if (email.toLowerCase() !== 'admin@learnix.edu' || password !== 'password123') {
-      incrementFailure();
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Direct transition to verifying device
-    setIsSubmitting(false);
     setStep('verifying');
 
-    await new Promise((r) => setTimeout(r, 900));
-    await login(email, password, 'admin');
-    navigate('/admin/dashboard', { replace: true });
+    try {
+      const loggedUser = await login(email, password);
+      if (loggedUser.role !== 'admin') {
+        setStep('credentials');
+        setIsSubmitting(false);
+        setError('Access denied. Administrator privileges required.');
+        return;
+      }
+      navigate('/admin/dashboard', { replace: true });
+    } catch (err) {
+      setStep('credentials');
+      setIsSubmitting(false);
+      incrementFailure();
+      setError(err.message || 'Invalid administrator credentials.');
+    }
   };
 
   return (
