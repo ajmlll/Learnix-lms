@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ArrowRight, ArrowLeft, Upload, DollarSign, BookOpen, Layers } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ArrowLeft, Upload, DollarSign, BookOpen } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
+import courseService from '../../services/courseService';
 import { toast } from 'react-toastify';
 
 export const CreateCourse = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Categories list from API
+  const [categoriesList, setCategoriesList] = useState([]);
+
   // Step 1 Form
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
-  const [category, setCategory] = useState('Web Development');
+  const [category, setCategory] = useState('');
   const [level, setLevel] = useState('Intermediate');
   const [description, setDescription] = useState('');
+  const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600');
 
   // Step 2 Form
   const [price, setPrice] = useState('89.99');
@@ -28,6 +33,21 @@ export const CreateCourse = () => {
   const [newPoint, setNewPoint] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
 
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const data = await courseService.getCategories();
+        setCategoriesList(data || []);
+        if (data && data.length > 0) {
+          setCategory(data[0]._id || data[0].id || data[0].name);
+        }
+      } catch (err) {
+        console.error('[CreateCourse API Error]:', err);
+      }
+    };
+    fetchCats();
+  }, []);
+
   const handleAddPoint = (e) => {
     e.preventDefault();
     if (newPoint.trim()) {
@@ -36,80 +56,112 @@ export const CreateCourse = () => {
     }
   };
 
+  const handleRemovePoint = (index) => {
+    setLearningPoints(learningPoints.filter((_, idx) => idx !== index));
+  };
+
   const handlePublish = async () => {
+    if (!title.trim()) {
+      toast.error('Course title is required.');
+      return;
+    }
+
     setIsPublishing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsPublishing(false);
-    toast.success(`🎉 Course "${title || 'New Course'}" created successfully!`);
-    navigate('/instructor/my-courses');
+    try {
+      await courseService.createCourse({
+        title,
+        subtitle: subtitle || 'Comprehensive engineering curriculum.',
+        category: category || categoriesList[0]?._id,
+        level,
+        description: description || subtitle || 'Full-stack course curriculum built for engineers.',
+        price: Number(price) || 0,
+        originalPrice: Number(originalPrice) || Number(price) || 0,
+        learningPoints,
+        thumbnail,
+        status: 'pending',
+      });
+
+      toast.success(`🎉 Course "${title}" submitted for QA review!`);
+      navigate('/instructor/my-courses');
+    } catch (err) {
+      console.error('[CreateCourse Publish Error]:', err);
+      toast.error(err.message || 'Failed to submit course.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
     <div className="py-8 px-4 sm:px-6 max-w-4xl mx-auto space-y-8 font-sans">
       
       {/* Header Banner */}
-      <div className="space-y-2">
-        <Badge variant="amber" size="sm">COURSE CREATION WIZARD</Badge>
-        <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-gray-900 tracking-tight">
-          Create New Course
-        </h1>
-        <p className="text-xs text-gray-500">
-          Fill out course details, pricing, and learning objectives to submit your curriculum.
-        </p>
-      </div>
-
-      {/* Multi-Step Wizard Progress Bar */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-4 text-xs font-semibold">
-        <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-[#4F46E5]' : 'text-gray-400'}`}>
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs ${currentStep >= 1 ? 'bg-[#4F46E5] text-white' : 'bg-gray-200'}`}>1</div>
-          <span>Basic Information</span>
-        </div>
-        <span className="text-gray-300">•</span>
-        <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-[#4F46E5]' : 'text-gray-400'}`}>
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs ${currentStep >= 2 ? 'bg-[#4F46E5] text-white' : 'bg-gray-200'}`}>2</div>
-          <span>Pricing & Learning Goals</span>
-        </div>
-        <span className="text-gray-300">•</span>
-        <div className={`flex items-center gap-2 ${currentStep >= 3 ? 'text-[#4F46E5]' : 'text-gray-400'}`}>
-          <div className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs ${currentStep >= 3 ? 'bg-[#4F46E5] text-white' : 'bg-gray-200'}`}>3</div>
-          <span>Review & Publish</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[12px] border border-gray-200 shadow-soft">
+        <div className="space-y-1">
+          <Badge variant="amber" size="sm" hasDot>FACULTY STUDIO</Badge>
+          <h1 className="text-2xl font-bold font-heading text-gray-900">
+            Create New Course Curriculum
+          </h1>
+          <p className="text-xs text-gray-500">
+            Draft your course outline, set pricing, and submit for quality assurance review.
+          </p>
         </div>
       </div>
 
-      {/* Step Contents */}
+      {/* Progress Steps Indicator */}
+      <div className="flex items-center gap-4 bg-white p-4 rounded-[12px] border border-gray-200 shadow-soft">
+        <div className={`flex items-center gap-2 text-xs font-bold ${currentStep === 1 ? 'text-[#4F46E5]' : 'text-emerald-600'}`}>
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono ${currentStep === 1 ? 'bg-indigo-50 text-[#4F46E5] border border-indigo-200' : 'bg-emerald-50 text-emerald-600'}`}>
+            {currentStep > 1 ? '✓' : '1'}
+          </span>
+          <span>1. Basic Details</span>
+        </div>
+        <span className="text-gray-300">•</span>
+        <div className={`flex items-center gap-2 text-xs font-bold ${currentStep === 2 ? 'text-[#4F46E5]' : 'text-gray-400'}`}>
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-mono ${currentStep === 2 ? 'bg-indigo-50 text-[#4F46E5] border border-indigo-200' : 'bg-gray-100 text-gray-400'}`}>
+            2
+          </span>
+          <span>2. Pricing & Goals</span>
+        </div>
+      </div>
+
       {currentStep === 1 && (
-        <Card className="p-6 space-y-4 shadow-soft">
+        <Card className="p-6 space-y-6 shadow-soft">
           <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
-            Step 1: Course Basics
+            Step 1: Course Information
           </h2>
 
           <Input
             label="Course Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Next.js 15 App Router & Server Components"
+            placeholder="e.g. Master Production AI Agent Engineering 2026"
             isRequired
           />
 
           <Input
-            label="Subtitle / Short Tagline"
+            label="Short Subtitle / Tagline"
             value={subtitle}
             onChange={(e) => setSubtitle(e.target.value)}
-            placeholder="e.g. Master full-stack web applications with React 19 and Tailwind CSS v4."
+            placeholder="e.g. Build multi-modal agents with LangChain, Next.js, and Redis."
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1 font-heading">Category</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1 font-heading">Category Taxonomy</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full text-xs font-semibold bg-white border border-gray-200 rounded-[8px] p-2.5 outline-none"
               >
-                <option value="Web Development">Web Development</option>
-                <option value="AI & Data Science">AI & Data Science</option>
-                <option value="Cloud & DevOps">Cloud & DevOps</option>
-                <option value="UI/UX & Design Systems">UI/UX & Design Systems</option>
+                {categoriesList.length > 0 ? (
+                  categoriesList.map((cat) => (
+                    <option key={cat._id || cat.id} value={cat._id || cat.id || cat.name}>
+                      {cat.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="Web Development">Web Development</option>
+                )}
               </select>
             </div>
 
@@ -129,12 +181,14 @@ export const CreateCourse = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1 font-heading">Course Thumbnail Upload</label>
-            <div className="border-2 border-dashed border-gray-200 rounded-[12px] p-8 text-center bg-[#F8F9FC] space-y-2 cursor-pointer hover:border-[#4F46E5] transition-colors">
-              <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-              <p className="text-xs font-bold text-gray-700">Click to upload thumbnail image</p>
-              <p className="text-[11px] text-gray-400">PNG, JPG or WEBP up to 5MB (16:9 aspect ratio recommended)</p>
-            </div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1 font-heading">Course Description</label>
+            <textarea
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Detailed description of what this course covers..."
+              className="w-full text-xs bg-white border border-gray-200 rounded-[8px] p-3 outline-none focus:border-[#4F46E5]"
+            />
           </div>
 
           <div className="flex justify-end pt-4 border-t border-gray-100">
@@ -198,10 +252,10 @@ export const CreateCourse = () => {
                 <li key={idx} className="flex items-center justify-between p-2.5 bg-[#F8F9FC] rounded-[8px] border border-gray-200 text-xs">
                   <span className="text-gray-800 font-medium">✓ {pt}</span>
                   <button
-                    onClick={() => setLearningPoints(learningPoints.filter((_, i) => i !== idx))}
-                    className="text-red-500 hover:underline text-[11px]"
+                    onClick={() => handleRemovePoint(idx)}
+                    className="text-red-500 hover:text-red-700 text-xs cursor-pointer font-bold"
                   >
-                    Remove
+                    ✕
                   </button>
                 </li>
               ))}
@@ -212,43 +266,15 @@ export const CreateCourse = () => {
             <Button variant="outline" size="md" leftIcon={ArrowLeft} onClick={() => setCurrentStep(1)}>
               Back to Step 1
             </Button>
-            <Button variant="primary" size="md" rightIcon={ArrowRight} onClick={() => setCurrentStep(3)}>
-              Continue to Step 3
-            </Button>
-          </div>
-        </Card>
-      )}
 
-      {currentStep === 3 && (
-        <Card className="p-6 space-y-6 shadow-soft">
-          <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
-            Step 3: Review & Publish
-          </h2>
-
-          <div className="bg-[#F8F9FC] p-4 rounded-[12px] border border-gray-200 space-y-3 text-xs">
-            <div>
-              <span className="text-gray-400 font-mono">Title:</span>
-              <h3 className="text-sm font-bold text-gray-900 font-heading">{title}</h3>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-gray-400 font-mono">Category & Level:</span>
-                <p className="font-semibold text-gray-800">{category} • {level}</p>
-              </div>
-              <div>
-                <span className="text-gray-400 font-mono">Price:</span>
-                <p className="font-bold text-[#4F46E5] font-mono">${price} USD</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <Button variant="outline" size="md" leftIcon={ArrowLeft} onClick={() => setCurrentStep(2)}>
-              Back to Step 2
-            </Button>
-            <Button variant="primary" size="lg" isLoading={isPublishing} leftIcon={CheckCircle2} onClick={handlePublish}>
-              Publish Course to Marketplace
+            <Button
+              variant="amber"
+              size="md"
+              leftIcon={CheckCircle2}
+              isLoading={isPublishing}
+              onClick={handlePublish}
+            >
+              Submit Course for QA Review
             </Button>
           </div>
         </Card>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle, Eye, AlertCircle, Layers, Trash2 } from 'lucide-react';
+import { BookOpen, CheckCircle2, XCircle } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -22,10 +22,10 @@ export const ManageCourses = () => {
     try {
       if (activeTab === 'pending' || activeTab === 'pending_review') {
         const res = await adminService.getPendingCourses();
-        setCourses(res.data || []);
+        setCourses(res.data || res.courses || []);
       } else {
-        const res = await courseService.getCourses();
-        setCourses(res.courses || []);
+        const res = await courseService.getCourses({ status: activeTab !== 'all' ? activeTab : undefined });
+        setCourses(res.courses || res.data || []);
       }
     } catch (err) {
       console.error('[ManageCourses API Error]:', err);
@@ -72,7 +72,7 @@ export const ManageCourses = () => {
 
   const getStatusBadge = (status) => {
     if (status === 'published') return <Badge variant="success" size="sm">PUBLISHED</Badge>;
-    if (status === 'pending_review') return <Badge variant="amber" size="sm" hasDot>NEEDS REVIEW</Badge>;
+    if (status === 'pending' || status === 'pending_review') return <Badge variant="amber" size="sm" hasDot>NEEDS REVIEW</Badge>;
     return <Badge variant="neutral" size="sm">DRAFT</Badge>;
   };
 
@@ -96,7 +96,7 @@ export const ManageCourses = () => {
       <div className="flex items-center gap-2 border-b border-gray-200 pb-3 overflow-x-auto">
         {[
           { id: 'all', label: 'All Catalog Courses' },
-          { id: 'pending_review', label: 'Pending Review', count: courses.filter((c) => c.status === 'pending_review').length },
+          { id: 'pending_review', label: 'Pending Review', count: courses.filter((c) => c.status === 'pending' || c.status === 'pending_review').length },
           { id: 'published', label: 'Published' },
           { id: 'draft', label: 'Drafts' },
         ].map((tab) => (
@@ -105,7 +105,7 @@ export const ManageCourses = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`px-3 py-1.5 text-xs font-semibold rounded-[8px] transition-colors cursor-pointer shrink-0 ${
               activeTab === tab.id
-                ? 'bg-[#4F46E5] text-white shadow-xs'
+                ? 'bg-[#4F46E5] text-[#FFFFFF] shadow-xs'
                 : 'bg-[#F8F9FC] text-gray-600 hover:bg-gray-100'
             }`}
           >
@@ -129,78 +129,88 @@ export const ManageCourses = () => {
           </div>
         ) : (
           <>
-        {/* Desktop View (>=768px) */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-600">
-            <thead className="bg-[#F8F9FC] border-b border-gray-200 text-gray-700 font-heading font-bold uppercase tracking-wider">
-              <tr>
-                <th className="p-4">Course Info</th>
-                <th className="p-4">Instructor</th>
-                <th className="p-4">Category</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Price</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {filteredCourses.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50/60 transition-colors">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <img src={c.thumbnail} alt={c.title} className="w-14 h-10 rounded-[6px] object-cover shrink-0" />
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-xs font-heading">{c.title}</h4>
-                        <p className="text-[11px] text-gray-400">Submitted {c.submittedDate}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 font-semibold text-gray-800">{c.instructor}</td>
-                  <td className="p-4">{c.category}</td>
-                  <td className="p-4">{getStatusBadge(c.status)}</td>
-                  <td className="p-4 font-mono font-bold text-gray-900">${c.price}</td>
-                  <td className="p-4 text-right">
-                    {c.status === 'pending_review' ? (
-                      <Button variant="amber" size="sm" onClick={() => handleOpenReview(c)}>
-                        Review Submission
-                      </Button>
-                    ) : (
-                      <Button variant="secondary" size="sm" onClick={() => handleOpenReview(c)}>
-                        View Details
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile View (<768px) Stacked Cards */}
-        <div className="md:hidden divide-y divide-gray-200">
-          {filteredCourses.map((c) => (
-            <div key={c.id} className="p-4 space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img src={c.thumbnail} alt={c.title} className="w-12 h-12 rounded-[6px] object-cover shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-gray-900 text-xs font-heading">{c.title}</h4>
-                    <p className="text-[11px] text-gray-400">By {c.instructor}</p>
-                  </div>
-                </div>
-                {getStatusBadge(c.status)}
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs font-mono">
-                <span>Category: {c.category}</span>
-                <span className="font-bold text-gray-900">${c.price}</span>
-              </div>
-
-              <Button variant="primary" size="sm" fullWidth onClick={() => handleOpenReview(c)}>
-                Review Course Submission
-              </Button>
+            {/* Desktop View (>=768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs text-gray-600">
+                <thead className="bg-[#F8F9FC] border-b border-gray-200 text-gray-700 font-heading font-bold uppercase tracking-wider">
+                  <tr>
+                    <th className="p-4">Course Info</th>
+                    <th className="p-4">Instructor</th>
+                    <th className="p-4">Category</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Price</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {filteredCourses.map((c) => {
+                    const courseId = c._id || c.id;
+                    const instructorName = c.instructor?.name || (typeof c.instructor === 'string' ? c.instructor : 'Faculty Member');
+                    const catName = c.category?.name || c.category || 'General';
+                    return (
+                      <tr key={courseId} className="hover:bg-gray-50/60 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <img src={c.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300'} alt={c.title} className="w-14 h-10 rounded-[6px] object-cover shrink-0" />
+                            <div>
+                              <h4 className="font-bold text-gray-900 text-xs font-heading">{c.title}</h4>
+                              <p className="text-[11px] text-gray-400">Created {new Date(c.createdAt || Date.now()).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 font-semibold text-gray-800">{instructorName}</td>
+                        <td className="p-4">{catName}</td>
+                        <td className="p-4">{getStatusBadge(c.status)}</td>
+                        <td className="p-4 font-mono font-bold text-gray-900">${c.price || 0}</td>
+                        <td className="p-4 text-right">
+                          {c.status === 'pending' || c.status === 'pending_review' ? (
+                            <Button variant="amber" size="sm" onClick={() => handleOpenReview(c)}>
+                              Review Submission
+                            </Button>
+                          ) : (
+                            <Button variant="secondary" size="sm" onClick={() => handleOpenReview(c)}>
+                              View Details
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          ))}
-        </div>
+
+            {/* Mobile View (<768px) Stacked Cards */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {filteredCourses.map((c) => {
+                const courseId = c._id || c.id;
+                const instructorName = c.instructor?.name || (typeof c.instructor === 'string' ? c.instructor : 'Faculty Member');
+                const catName = c.category?.name || c.category || 'General';
+                return (
+                  <div key={courseId} className="p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <img src={c.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300'} alt={c.title} className="w-12 h-12 rounded-[6px] object-cover shrink-0" />
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-xs font-heading">{c.title}</h4>
+                          <p className="text-[11px] text-gray-400">By {instructorName}</p>
+                        </div>
+                      </div>
+                      {getStatusBadge(c.status)}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs font-mono">
+                      <span>Category: {catName}</span>
+                      <span className="font-bold text-gray-900">${c.price || 0}</span>
+                    </div>
+
+                    <Button variant="primary" size="sm" fullWidth onClick={() => handleOpenReview(c)}>
+                      Review Course Submission
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
       </Card>
@@ -217,27 +227,15 @@ export const ManageCourses = () => {
             
             {/* Left Side: Course Details & Syllabus */}
             <div className="space-y-4 pr-0 lg:pr-4 border-b lg:border-b-0 lg:border-r border-gray-200 pb-4 lg:pb-0">
-              <img src={reviewCourse.thumbnail} alt={reviewCourse.title} className="w-full h-44 rounded-[10px] object-cover" />
+              <img src={reviewCourse.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=300'} alt={reviewCourse.title} className="w-full h-44 rounded-[10px] object-cover" />
               <div>
                 <h3 className="text-base font-bold font-heading text-gray-900">{reviewCourse.title}</h3>
-                <p className="text-xs text-gray-500 mt-1">Instructor: <strong className="text-gray-800">{reviewCourse.instructor}</strong></p>
+                <p className="text-xs text-gray-500 mt-1">Instructor: <strong className="text-gray-800">{reviewCourse.instructor?.name || (typeof reviewCourse.instructor === 'string' ? reviewCourse.instructor : 'Faculty')}</strong></p>
               </div>
 
               <div className="bg-[#F8F9FC] p-3 rounded-[8px] border border-gray-200 text-xs space-y-1">
-                <span className="font-bold text-gray-700 font-heading block">Instructor Submission Notes:</span>
-                <p className="text-gray-600 leading-relaxed italic">"{reviewCourse.notes}"</p>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <span className="font-bold text-gray-900 font-heading block">Curriculum Syllabus Overview:</span>
-                <div className="p-2.5 bg-white border border-gray-200 rounded-[6px] flex justify-between">
-                  <span>Module 1: Production Architecture</span>
-                  <span className="font-mono text-gray-400">4 Lessons</span>
-                </div>
-                <div className="p-2.5 bg-white border border-gray-200 rounded-[6px] flex justify-between">
-                  <span>Module 2: Advanced Server Actions</span>
-                  <span className="font-mono text-gray-400">6 Lessons</span>
-                </div>
+                <span className="font-bold text-gray-700 font-heading block">Course Description:</span>
+                <p className="text-gray-600 leading-relaxed italic">"{reviewCourse.description || reviewCourse.subtitle || 'No description provided.'}"</p>
               </div>
             </div>
 
