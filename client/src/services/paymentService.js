@@ -7,6 +7,12 @@ export const paymentService = {
     return response.data;
   },
 
+  // Process order / payment
+  processOrder: async ({ courseIds, amount, paymentMethod }) => {
+    const response = await api.post('/payments/process-order', { courseIds, amount, paymentMethod });
+    return response.data;
+  },
+
   // Get student's payment history
   getPaymentHistory: async () => {
     const response = await api.get('/payments/history');

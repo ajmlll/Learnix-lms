@@ -2,6 +2,7 @@ import express from 'express';
 import {
   createCheckoutSession,
   handleWebhook,
+  processOrder,
   getPaymentHistory,
   getInstructorEarnings,
 } from '../controllers/paymentController.js';
@@ -16,6 +17,7 @@ router.post('/webhook', handleWebhook);
 
 // Protected student routes
 router.post('/checkout-session', protect, validateCheckout, createCheckoutSession);
+router.post('/process-order', protect, processOrder);
 router.get('/history', protect, getPaymentHistory);
 
 // Protected instructor routes

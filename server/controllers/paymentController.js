@@ -149,6 +149,65 @@ export const handleWebhook = async (req, res) => {
   res.status(200).json({ received: true });
 };
 
+// @desc    Process Order / Dummy Stripe Payment (Multi-course)
+// @route   POST /api/payments/process-order
+// @access  Private (Student)
+export const processOrder = async (req, res, next) => {
+  try {
+    const { courseIds, amount, paymentMethod = 'card' } = req.body;
+
+    if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide an array of courseIds.',
+      });
+    }
+
+    const studentId = req.user._id;
+    const createdPayments = [];
+    const createdEnrollments = [];
+
+    for (const courseId of courseIds) {
+      const course = await Course.findById(courseId);
+      if (!course) continue;
+
+      const coursePrice = course.price || 0;
+
+      // 1. Create Payment Record
+      const payment = await Payment.create({
+        student: studentId,
+        course: courseId,
+        amount: coursePrice,
+        currency: 'INR',
+        paymentGatewayId: `PAY-STRIPE-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+        status: 'success',
+      });
+      createdPayments.push(payment);
+
+      // 2. Create Enrollment Record
+      const enrollment = await createEnrollmentInternal(studentId, courseId);
+      createdEnrollments.push(enrollment);
+
+      // 3. Increment course enrolledCount
+      await Course.findByIdAndUpdate(courseId, {
+        $inc: { enrolledCount: 1 },
+      });
+
+      // 4. Invalidate course cache
+      await invalidateCourseCache(courseId);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment and enrollments processed successfully!',
+      count: createdEnrollments.length,
+      payments: createdPayments,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get student's payment history
 // @route   GET /api/payments/history
 // @access  Private (Student)

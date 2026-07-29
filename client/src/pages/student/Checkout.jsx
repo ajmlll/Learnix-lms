@@ -8,6 +8,7 @@ import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 import { useCart } from '../../context/CartContext';
 import enrollmentService from '../../services/enrollmentService';
+import paymentService from '../../services/paymentService';
 import { toast } from 'react-toastify';
 
 export const Checkout = () => {
@@ -40,23 +41,21 @@ export const Checkout = () => {
 
     setIsProcessing(true);
     try {
-      // Enroll student in all purchased courses in parallel
-      const titles = [];
-      await Promise.all(
-        cartItems.map(async (course) => {
-          const cId = (course._id || course.id)?.toString();
-          if (cId) {
-            await enrollmentService.enroll(cId);
-            titles.push(course.title);
-          }
-        })
-      );
+      const courseIds = cartItems.map((c) => (c._id || c.id)?.toString()).filter(Boolean);
+      
+      // Process payment & enrollment via backend API
+      const res = await paymentService.processOrder({
+        courseIds,
+        amount: totalPrice,
+        paymentMethod,
+      });
 
+      const titles = cartItems.map((c) => c.title);
       setEnrolledTitles(titles);
       await refetchEnrollments();
       clearCart();
       setIsSuccessModalOpen(true);
-      toast.success('🎉 Purchase successful! Courses added to My Learning.');
+      toast.success('🎉 Payment successful! Courses added to My Learning.');
     } catch (err) {
       console.error('[Checkout Error]:', err);
       toast.error(err.message || 'Payment processing failed. Please try again.');
