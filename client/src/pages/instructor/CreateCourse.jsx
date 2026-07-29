@@ -262,6 +262,33 @@ export const CreateCourse = () => {
             />
           </div>
 
+          {/* Thumbnail Image URL & Preview */}
+          <div className="space-y-2">
+            <Input
+              label="Course Thumbnail Image URL"
+              value={thumbnail}
+              onChange={(e) => setThumbnail(e.target.value)}
+              leftIcon={Upload}
+              placeholder="https://images.unsplash.com/..."
+            />
+            {thumbnail && (
+              <div className="flex items-center gap-4 p-3 bg-[#F8F9FC] rounded-[10px] border border-gray-200">
+                <img
+                  src={thumbnail}
+                  alt="Thumbnail preview"
+                  className="w-24 h-16 rounded-[8px] object-cover border border-gray-200 shrink-0"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600';
+                  }}
+                />
+                <div className="text-xs space-y-0.5">
+                  <span className="font-bold text-gray-900 font-heading block">Thumbnail Live Preview</span>
+                  <p className="text-[11px] text-gray-500">This image will appear on the Marketplace catalog and course header.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="flex justify-end pt-4 border-t border-gray-100">
             <Button
               variant="primary"
