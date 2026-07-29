@@ -8,9 +8,11 @@ import {
 } from '../controllers/discussionController.js';
 import { protect } from '../middleware/auth.js';
 
+import { cacheMiddleware } from '../middleware/cache.js';
+
 const router = express.Router();
 
-router.get('/course/:courseId', getCourseDiscussions);
+router.get('/course/:courseId', cacheMiddleware('course_discussions', 120), getCourseDiscussions);
 router.post('/course/:courseId', protect, createDiscussion);
 router.post('/:id/replies', protect, addReply);
 router.put('/:id/upvote', protect, toggleUpvote);

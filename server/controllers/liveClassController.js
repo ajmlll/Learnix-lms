@@ -1,5 +1,6 @@
 import LiveClass from '../models/LiveClass.js';
 import Course from '../models/Course.js';
+import { invalidateLiveClassCache } from '../utils/cacheInvalidation.js';
 
 // @desc    Schedule a Live Class
 // @route   POST /api/live-classes
@@ -45,6 +46,8 @@ export const scheduleLiveClass = async (req, res, next) => {
       jitsiMeetingUrl,
       status: 'scheduled',
     });
+
+    await invalidateLiveClassCache(courseId);
 
     res.status(201).json({
       success: true,
@@ -138,6 +141,8 @@ export const updateLiveClass = async (req, res, next) => {
       runValidators: true,
     });
 
+    await invalidateLiveClassCache(liveClass.course);
+
     res.status(200).json({
       success: true,
       data: liveClass,
@@ -167,7 +172,9 @@ export const deleteLiveClass = async (req, res, next) => {
       });
     }
 
+    const courseId = liveClass.course;
     await liveClass.deleteOne();
+    await invalidateLiveClassCache(courseId);
 
     res.status(200).json({
       success: true,

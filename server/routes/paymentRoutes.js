@@ -10,6 +10,8 @@ import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
 import { validateCheckout } from '../middleware/validator.js';
 
+import { cacheMiddleware } from '../middleware/cache.js';
+
 const router = express.Router();
 
 // Webhook route (must be unauthenticated and receive raw body)
@@ -20,7 +22,7 @@ router.post('/checkout-session', protect, validateCheckout, createCheckoutSessio
 router.post('/process-order', protect, processOrder);
 router.get('/history', protect, getPaymentHistory);
 
-// Protected instructor routes
-router.get('/instructor-earnings', protect, authorize('instructor', 'admin'), getInstructorEarnings);
+// Protected instructor routes (cached 300s, user-namespaced)
+router.get('/instructor-earnings', protect, authorize('instructor', 'admin'), cacheMiddleware('instructor_earnings', 300), getInstructorEarnings);
 
 export default router;

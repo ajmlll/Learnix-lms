@@ -12,7 +12,8 @@ export const cacheMiddleware = (keyPrefix, ttlSeconds = 300) => {
       return next();
     }
 
-    const key = `${keyPrefix}:${req.originalUrl || req.url}`;
+    const userSegment = req.user?._id ? `:${req.user._id}` : '';
+    const key = `${keyPrefix}${userSegment}:${req.originalUrl || req.url}`;
 
     try {
       if (redisClient && redisClient.isOpen) {

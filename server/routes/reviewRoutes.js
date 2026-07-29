@@ -8,11 +8,13 @@ import {
 import { protect } from '../middleware/auth.js';
 import { validateReview } from '../middleware/validator.js';
 
+import { cacheMiddleware } from '../middleware/cache.js';
+
 const router = express.Router();
 
 router
   .route('/course/:courseId')
-  .get(getCourseReviews)
+  .get(cacheMiddleware('course_reviews', 300), getCourseReviews)
   .post(protect, validateReview, createReview);
 
 router

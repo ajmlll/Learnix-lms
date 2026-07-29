@@ -48,6 +48,7 @@ const enrollmentSchema = new mongoose.Schema(
 
 // Compound unique index to prevent duplicate enrollments
 enrollmentSchema.index({ student: 1, course: 1 }, { unique: true });
+enrollmentSchema.index({ student: 1, enrolledAt: -1 });
 
 const Enrollment = mongoose.model('Enrollment', enrollmentSchema);
 export default Enrollment;

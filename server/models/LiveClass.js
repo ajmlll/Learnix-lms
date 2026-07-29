@@ -51,6 +51,7 @@ const liveClassSchema = new mongoose.Schema(
 );
 
 liveClassSchema.index({ course: 1, scheduledAt: 1 });
+liveClassSchema.index({ instructor: 1 });
 
 const LiveClass = mongoose.model('LiveClass', liveClassSchema);
 export default LiveClass;

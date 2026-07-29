@@ -136,6 +136,8 @@ const courseSchema = new mongoose.Schema(
 
 // Defined Indexes
 courseSchema.index({ category: 1, isPublished: 1, price: 1 });
+courseSchema.index({ isPublished: 1, status: 1 });
+courseSchema.index({ instructor: 1 });
 courseSchema.index({ title: 'text', description: 'text' });
 
 const Course = mongoose.model('Course', courseSchema);

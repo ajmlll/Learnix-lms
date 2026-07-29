@@ -1,5 +1,5 @@
 import { XP, Streak } from '../models/Gamification.js';
-import redisClient from '../config/redis.js';
+import { invalidateLeaderboardCache } from './cacheInvalidation.js';
 
 /**
  * Award XP points to a user and invalidate leaderboard cache
@@ -13,19 +13,8 @@ export const awardXP = async (userId, action, points) => {
       points,
     });
 
-    // 2. Clear Redis leaderboard cache keys
-    if (redisClient && redisClient.isOpen) {
-      try {
-        if (redisClient.keys) {
-          const keys = await redisClient.keys('leaderboard:*');
-          if (keys && keys.length > 0) {
-            await Promise.all(keys.map((k) => redisClient.del(k)));
-          }
-        }
-      } catch (redisErr) {
-        console.error('[awardXP Cache Clear Error]:', redisErr.message);
-      }
-    }
+    // 2. Clear Redis leaderboard cache
+    await invalidateLeaderboardCache();
 
     console.log(`[Gamification]: Awarded ${points} XP to user ${userId} for '${action}'`);
   } catch (error) {

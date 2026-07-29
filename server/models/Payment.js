@@ -39,6 +39,7 @@ const paymentSchema = new mongoose.Schema(
 // Defined Indexes
 paymentSchema.index({ student: 1 });
 paymentSchema.index({ status: 1 });
+paymentSchema.index({ course: 1, status: 1 });
 
 const Payment = mongoose.model('Payment', paymentSchema);
 export default Payment;

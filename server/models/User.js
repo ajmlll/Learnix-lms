@@ -53,11 +53,25 @@ const userSchema = new mongoose.Schema(
     ],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
+    xpPoints: {
+      type: Number,
+      default: 0,
+    },
+    streakDays: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Defined Indexes
+userSchema.index({ role: 1 });
+userSchema.index({ xpPoints: -1 });
+userSchema.index({ streakDays: -1 });
+userSchema.index({ createdAt: -1 });
 
 // Pre-save hook for password hashing
 userSchema.pre('save', async function (next) {

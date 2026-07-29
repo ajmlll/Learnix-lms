@@ -237,23 +237,30 @@ export const getInstructorEarnings = async (req, res, next) => {
     const instructorCourses = await Course.find({ instructor: req.user._id }).select('_id');
     const courseIds = instructorCourses.map((c) => c._id);
 
-    // 2. Fetch successful payments for these courses
-    const payments = await Payment.find({
-      course: { $in: courseIds },
-      status: 'success',
-    })
-      .populate('student', 'name email avatar')
-      .populate('course', 'title price')
-      .sort({ createdAt: -1 })
-      .lean();
+    // 2. Aggregate total earnings & sales count via MongoDB $group + $sum pipeline
+    const [earningsAggregation, payments] = await Promise.all([
+      Payment.aggregate([
+        { $match: { course: { $in: courseIds }, status: 'success' } },
+        { $group: { _id: null, totalEarnings: { $sum: '$amount' }, totalSales: { $sum: 1 } } },
+      ]),
+      Payment.find({
+        course: { $in: courseIds },
+        status: 'success',
+      })
+        .populate('student', 'name email avatar')
+        .populate('course', 'title price')
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean(),
+    ]);
 
-    // 3. Calculate total earnings
-    const totalEarnings = payments.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalEarnings = earningsAggregation[0]?.totalEarnings || 0;
+    const totalSales = earningsAggregation[0]?.totalSales || 0;
 
     res.status(200).json({
       success: true,
       totalEarnings,
-      totalSales: payments.length,
+      totalSales,
       data: payments,
     });
   } catch (error) {

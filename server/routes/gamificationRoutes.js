@@ -9,10 +9,12 @@ import {
 } from '../controllers/gamificationController.js';
 import { protect } from '../middleware/auth.js';
 
+import { cacheMiddleware } from '../middleware/cache.js';
+
 const router = express.Router();
 
 // Public leaderboard route (cached 90s in Redis)
-router.get('/leaderboard', getLeaderboard);
+router.get('/leaderboard', cacheMiddleware('leaderboard', 90), getLeaderboard);
 
 // Protected routes
 router.get('/xp', protect, getXP);

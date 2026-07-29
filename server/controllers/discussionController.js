@@ -1,4 +1,5 @@
 import Discussion from '../models/Discussion.js';
+import { invalidateDiscussionCache } from '../utils/cacheInvalidation.js';
 
 // @desc    Create a Q&A discussion thread
 // @route   POST /api/discussions/course/:courseId
@@ -24,6 +25,8 @@ export const createDiscussion = async (req, res, next) => {
       upvotes: [],
       replies: [],
     });
+
+    await invalidateDiscussionCache(courseId);
 
     res.status(201).json({
       success: true,
@@ -96,6 +99,7 @@ export const addReply = async (req, res, next) => {
     });
 
     await discussion.save();
+    await invalidateDiscussionCache(discussion.course);
 
     res.status(201).json({
       success: true,
@@ -128,6 +132,7 @@ export const toggleUpvote = async (req, res, next) => {
     }
 
     await discussion.save();
+    await invalidateDiscussionCache(discussion.course);
 
     res.status(200).json({
       success: true,
@@ -159,7 +164,9 @@ export const deleteDiscussion = async (req, res, next) => {
       });
     }
 
+    const courseId = discussion.course;
     await discussion.deleteOne();
+    await invalidateDiscussionCache(courseId);
 
     res.status(200).json({
       success: true,
