@@ -4,7 +4,6 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { ENROLLMENT_TRENDS, PAYOUT_HISTORY } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const Earnings = () => {

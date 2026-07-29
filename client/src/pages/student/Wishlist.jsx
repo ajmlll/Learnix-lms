@@ -5,21 +5,20 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { CardSkeleton } from '../../components/common/Skeleton';
-import { COURSES } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const Wishlist = () => {
   const navigate = useNavigate();
-  const [wishlistItems, setWishlistItems] = useState([COURSES[2]]);
+  const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 450);
+    const t = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(t);
   }, []);
 
   const handleRemove = (id) => {
-    setWishlistItems((prev) => prev.filter((item) => item.id !== id));
+    setWishlistItems((prev) => prev.filter((item) => (item.id !== id && item._id !== id)));
     toast.info('Item removed from wishlist.');
   };
 
@@ -60,50 +59,52 @@ export const Wishlist = () => {
 
       {wishlistItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {wishlistItems.map((course) => (
-            <Card hoverable key={course.id} className="p-0 overflow-hidden flex flex-col justify-between space-y-0">
-              <div>
-                <div className="relative h-44 w-full overflow-hidden">
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => handleRemove(course.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-white transition-colors cursor-pointer"
-                    title="Remove from Wishlist"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{course.category}</span>
-                    <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" />
-                      {course.rating}
-                    </span>
+          {wishlistItems.map((course) => {
+            const courseId = course._id || course.id;
+            return (
+              <Card hoverable key={courseId} className="p-0 overflow-hidden flex flex-col justify-between space-y-0">
+                <div>
+                  <div className="relative h-44 w-full overflow-hidden">
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => handleRemove(courseId)}
+                      className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full hover:bg-white transition-colors cursor-pointer"
+                      title="Remove from Wishlist"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
 
-                  <h3 className="text-base font-bold font-heading text-gray-900 leading-snug">
-                    {course.title}
-                  </h3>
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>{course.category?.name || course.category || 'General'}</span>
+                      <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        {course.rating || 5.0}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                    <img src={course.instructor.avatar} alt={course.instructor.name} className="w-5 h-5 rounded-full object-cover" />
-                    <span>{course.instructor.name}</span>
+                    <h3 className="text-base font-bold font-heading text-gray-900 leading-snug">
+                      {course.title}
+                    </h3>
+
+                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
+                      <span>{course.instructor?.name || 'Learnix Faculty'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-4 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-baseline gap-1 font-mono">
-                  <span className="text-lg font-bold text-gray-900">${course.price}</span>
+                <div className="p-4 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
+                  <div className="flex items-baseline gap-1 font-mono">
+                    <span className="text-lg font-bold text-gray-900">₹{course.price || 0}</span>
+                  </div>
+                  <Button variant="primary" size="sm" leftIcon={ShoppingBag} onClick={() => handleMoveToCart(course)}>
+                    Move to Cart
+                  </Button>
                 </div>
-                <Button variant="primary" size="sm" leftIcon={ShoppingBag} onClick={() => handleMoveToCart(course)}>
-                  Move to Cart
-                </Button>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       ) : (
         <Card className="p-14 text-center space-y-4">

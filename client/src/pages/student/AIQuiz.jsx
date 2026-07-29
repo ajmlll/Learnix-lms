@@ -3,7 +3,6 @@ import { Sparkles, CheckCircle2, XCircle, Award, Zap, RefreshCw } from 'lucide-r
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { MOCK_AI_QUIZ } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const AIQuiz = () => {

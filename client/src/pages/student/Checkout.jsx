@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, CreditCard, Lock, CheckCircle2, ArrowRight, Download, BookOpen } from 'lucide-react';
-import { CART_ITEMS } from '../../data/mockData';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';

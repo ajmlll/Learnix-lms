@@ -16,7 +16,6 @@ import {
   Sparkles,
   Plus,
 } from 'lucide-react';
-import { COURSES, MOCK_LESSON_RESOURCES, MOCK_USER_NOTES } from '../../data/mockData';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';

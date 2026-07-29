@@ -3,7 +3,6 @@ import { MessageSquare, Send, CheckCircle2, Filter } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { INSTRUCTOR_DISCUSSIONS } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const Discussions = () => {

@@ -5,11 +5,10 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
-import { MOCK_LIVE_CLASSES } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const LiveClassManager = () => {
-  const [sessions, setSessions] = useState(MOCK_LIVE_CLASSES);
+  const [sessions, setSessions] = useState([]);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
   // Form State

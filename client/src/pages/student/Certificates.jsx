@@ -5,7 +5,6 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { Skeleton } from '../../components/common/Skeleton';
-import { MOCK_CERTIFICATES } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const Certificates = () => {

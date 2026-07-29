@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Search, ShieldCheck, Award, CheckCircle2, Download, Copy, ExternalLink, AlertTriangle } from 'lucide-react';
-import { MOCK_CERTIFICATES } from '../../data/mockData';
+import { Search, Award, ShieldCheck, CheckCircle2, XCircle, Download, ExternalLink, Calendar, User, BookOpen } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';

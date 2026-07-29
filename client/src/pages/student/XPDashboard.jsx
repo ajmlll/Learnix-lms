@@ -1,11 +1,15 @@
 import React from 'react';
-import { Zap, Sparkles, Trophy, Flame, History, Award } from 'lucide-react';
+import { Trophy, History } from 'lucide-react';
 import XPBar from '../../components/gamification/XPBar';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import { MOCK_XP_HISTORY } from '../../data/mockData';
 
 export const XPDashboard = () => {
+  const xpLogs = [
+    { id: '1', action: 'Completed Lecture 3: React Hooks', xp: 50, category: 'Lesson', date: 'Today' },
+    { id: '2', action: 'Scored 100% on AI MCQ Quiz', xp: 100, category: 'Quiz', date: 'Yesterday' },
+  ];
+
   return (
     <div className="space-y-8 font-sans">
       
@@ -84,11 +88,11 @@ export const XPDashboard = () => {
                 <History className="w-4 h-4 text-[#F59E0B]" />
                 Recent XP Activity Log
               </h3>
-              <Badge variant="amber" size="sm">5 LOGS</Badge>
+              <Badge variant="amber" size="sm">{xpLogs.length} LOGS</Badge>
             </div>
 
             <div className="space-y-3">
-              {MOCK_XP_HISTORY.map((log) => (
+              {xpLogs.map((log) => (
                 <div key={log.id} className="p-3 bg-[#F8F9FC] rounded-[8px] border border-gray-200 space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-bold text-gray-900">{log.action}</span>

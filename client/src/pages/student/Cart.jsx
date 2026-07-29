@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingBag, Trash2, Tag, ArrowRight, Star, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { CART_ITEMS } from '../../data/mockData';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';

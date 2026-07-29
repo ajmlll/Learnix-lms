@@ -3,7 +3,6 @@ import { Award, Sparkles } from 'lucide-react';
 import BadgeGrid from '../../components/gamification/BadgeGrid';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import { MOCK_ACHIEVEMENTS } from '../../data/mockData';
 
 export const Achievements = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');

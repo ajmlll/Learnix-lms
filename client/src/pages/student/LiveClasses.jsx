@@ -3,7 +3,6 @@ import { Video, Calendar, Clock, Users, Play, Radio } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { MOCK_LIVE_CLASSES } from '../../data/mockData';
 import { toast } from 'react-toastify';
 
 export const LiveClasses = () => {
