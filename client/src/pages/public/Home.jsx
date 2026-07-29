@@ -43,6 +43,7 @@ export const Home = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
