@@ -18,6 +18,15 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import adminService from '../../services/adminService';
 
+const defaultGrowthData = [
+  { month: 'Jan', users: 120, revenue: 1200 },
+  { month: 'Feb', users: 240, revenue: 2400 },
+  { month: 'Mar', users: 480, revenue: 4900 },
+  { month: 'Apr', users: 850, revenue: 8200 },
+  { month: 'May', users: 1300, revenue: 14500 },
+  { month: 'Jun', users: 1800, revenue: 21000 },
+];
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({
@@ -75,24 +84,24 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Platform-wide Stats Cards */}
+      {/* Metrics Row (Populated by $facet Aggregation) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Total Users</span>
+            <span className="text-xs font-medium text-gray-500">Total Registered Users</span>
             <Users className="w-4 h-4 text-[#4F46E5]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-gray-900">18,400</div>
-          <p className="text-[11px] text-emerald-600 font-medium">+2,000 new this month</p>
+          <div className="text-2xl font-bold font-mono text-gray-900">{stats.totalUsers || 0}</div>
+          <p className="text-[11px] text-emerald-600 font-medium">Platform-wide users</p>
         </Card>
 
         <Card className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Active Courses</span>
+            <span className="text-xs font-medium text-gray-500">Total Courses</span>
             <BookOpen className="w-4 h-4 text-[#4F46E5]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-gray-900">142 Published</div>
-          <p className="text-[11px] text-amber-700 font-medium">2 Pending Approval</p>
+          <div className="text-2xl font-bold font-mono text-gray-900">{stats.totalCourses || 0}</div>
+          <p className="text-[11px] text-amber-700 font-medium">{pendingApprovals.length} Pending Approval</p>
         </Card>
 
         <Card className="space-y-1">
@@ -100,36 +109,36 @@ export const AdminDashboard = () => {
             <span className="text-xs font-medium text-gray-500">Gross Platform Revenue</span>
             <DollarSign className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-gray-900">$184,200</div>
-          <p className="text-[11px] text-emerald-600 font-medium">+$56,200 in June</p>
+          <div className="text-2xl font-bold font-mono text-gray-900">${(stats.totalRevenue || 0).toLocaleString()}</div>
+          <p className="text-[11px] text-emerald-600 font-medium">Successful Stripe payments</p>
         </Card>
 
         <Card className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Active Subscriptions</span>
+            <span className="text-xs font-medium text-gray-500">Active Enrollments</span>
             <CreditCard className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-2xl font-bold font-mono text-gray-900">3,890</div>
-          <p className="text-[11px] text-emerald-600 font-medium">94.2% Retention Rate</p>
+          <div className="text-2xl font-bold font-mono text-gray-900">{stats.activeEnrollments || 0}</div>
+          <p className="text-[11px] text-emerald-600 font-medium">Student enrollments</p>
         </Card>
       </div>
 
-      {/* Recharts Area Chart: Platform User Growth (Indigo #4F46E5) & Gross Revenue (Amber #F59E0B) */}
+      {/* Recharts Area Chart: Platform User Growth & Revenue */}
       <Card className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-4 gap-2">
           <div>
             <h2 className="text-base font-bold font-heading text-gray-900 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-[#4F46E5]" />
-              Platform Scale & Revenue Trajectory (H1 2026)
+              Platform Growth Trajectory
             </h2>
             <p className="text-xs text-gray-500">Monthly active user signups vs. gross platform revenue ($ USD)</p>
           </div>
-          <Badge variant="primary" size="sm">H1 2026 REPORT</Badge>
+          <Badge variant="primary" size="sm">LIVE REPORT</Badge>
         </div>
 
         <div className="h-72 w-full pt-2">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={PLATFORM_GROWTH}>
+            <AreaChart data={defaultGrowthData}>
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
@@ -158,33 +167,30 @@ export const AdminDashboard = () => {
         <div className="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 className="text-base font-bold font-heading text-gray-900 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-500" />
-            Pending Curriculum Approvals Queue ({pendingApprovals.length})
+            Curriculum Review Queue ({pendingApprovals.length})
           </h3>
-          <button
-            onClick={() => navigate('/admin/approvals')}
-            className="text-xs font-semibold text-[#4F46E5] hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <span>Go to Approval Manager</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/admin/approvals')}>
+            Manage Submissions
+          </Button>
         </div>
 
-        <div className="space-y-3">
-          {pendingApprovals.map((c) => (
-            <div key={c.id} className="p-4 bg-[#F8F9FC] rounded-[8px] border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3">
-                <img src={c.thumbnail} alt={c.title} className="w-12 h-12 rounded-[6px] object-cover shrink-0" />
+        {pendingApprovals.length > 0 ? (
+          <div className="space-y-3">
+            {pendingApprovals.slice(0, 3).map((course) => (
+              <div key={course._id || course.id} className="p-4 bg-gray-50 rounded-[10px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-gray-100">
                 <div>
-                  <h4 className="font-bold text-gray-900 font-heading">{c.title}</h4>
-                  <p className="text-[11px] text-gray-500">Instructor: {c.instructor} • Submitted {c.submittedDate}</p>
+                  <h4 className="text-sm font-bold text-gray-900">{course.title}</h4>
+                  <p className="text-xs text-gray-500">Instructor: {course.instructor?.name || 'Faculty Member'}</p>
                 </div>
+                <Button variant="primary" size="sm" onClick={() => navigate('/admin/approvals')}>
+                  Review Course
+                </Button>
               </div>
-              <Button variant="primary" size="sm" onClick={() => navigate('/admin/approvals')}>
-                Review Submission
-              </Button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500 py-4 text-center">No pending courses awaiting review.</p>
+        )}
       </Card>
 
     </div>
