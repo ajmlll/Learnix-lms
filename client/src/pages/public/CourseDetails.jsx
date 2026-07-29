@@ -13,6 +13,11 @@ import {
   Users,
   Globe,
   ArrowLeft,
+  Share2,
+  Heart,
+  FileText,
+  Sparkles,
+  Lock,
 } from 'lucide-react';
 import courseService from '../../services/courseService';
 import Card from '../../components/common/Card';
@@ -20,6 +25,7 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { CardSkeleton } from '../../components/common/Skeleton';
+import { toast } from 'react-toastify';
 
 export const CourseDetails = () => {
   const { id } = useParams();
@@ -30,6 +36,7 @@ export const CourseDetails = () => {
   const [openModuleIndex, setOpenModuleIndex] = useState(0);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [activePreviewLesson, setActivePreviewLesson] = useState(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -53,6 +60,13 @@ export const CourseDetails = () => {
   const handleOpenPreview = (lesson) => {
     setActivePreviewLesson(lesson);
     setIsPreviewModalOpen(true);
+  };
+
+  const handleShare = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Course link copied to clipboard!');
+    }
   };
 
   if (isLoading) {
@@ -87,138 +101,172 @@ export const CourseDetails = () => {
   const instructorName = typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member');
   const instructorAvatar = typeof course.instructor === 'object' ? (course.instructor?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250') : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
 
+  const originalPrice = course.originalPrice || (course.price ? Math.round(course.price * 1.5) : 0);
+
   return (
-    <div className="font-sans space-y-12 pb-16">
+    <div className="font-sans space-y-10 pb-20 bg-[#F8F9FC]">
       
-      {/* 1. Dark Course Hero Banner */}
-      <div className="bg-slate-900 text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-4">
+      {/* ── 1. Hero Banner Section ── */}
+      <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden">
+        {/* Glow accent */}
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative z-10">
+          <div className="lg:col-span-2 space-y-5">
             
-            {/* Category Breadcrumb & Badges */}
+            {/* Breadcrumbs */}
+            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+              <Link to="/courses" className="hover:text-white transition-colors">Courses</Link>
+              <span>/</span>
+              <span className="text-indigo-400">{categoryName}</span>
+            </div>
+
+            {/* Badges row */}
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="primary" size="sm">{categoryName}</Badge>
+              <Badge variant="primary" size="sm" hasDot>{categoryName}</Badge>
               <Badge variant="amber" size="sm">{course.level || 'All Levels'}</Badge>
               {course.isBestseller && <Badge variant="success" size="sm">BESTSELLER</Badge>}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold font-heading text-white tracking-tight leading-tight">
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-heading text-white tracking-tight leading-tight">
               {course.title}
             </h1>
 
-            <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
+            {/* Subtitle */}
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-3xl font-sans">
               {course.subtitle || course.description}
             </p>
 
-            {/* Rating & Stats row */}
-            <div className="flex flex-wrap items-center gap-4 text-xs pt-2 text-slate-300">
-              <div className="flex items-center gap-1.5 font-bold font-mono text-amber-400">
+            {/* Metrics & Ratings */}
+            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-2 border-t border-slate-800/80">
+              <div className="flex items-center gap-1.5 font-bold font-mono text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full border border-amber-400/20">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 <span>{course.rating || 5.0}</span>
-                <span className="text-slate-400 font-normal">({course.reviewCount || 0} ratings)</span>
+                <span className="text-slate-400 font-normal">({course.reviewCount || 0} reviews)</span>
               </div>
-              <span>•</span>
-              <div className="flex items-center gap-1">
+              
+              <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-indigo-400" />
-                <span>{(course.studentsEnrolled || 0).toLocaleString()} Students</span>
+                <span className="font-mono font-bold text-white">{(course.studentsEnrolled || 0).toLocaleString()}</span>
+                <span>Students Enrolled</span>
               </div>
-              <span>•</span>
-              <div className="flex items-center gap-1">
+
+              <div className="flex items-center gap-1.5">
                 <Globe className="w-4 h-4 text-emerald-400" />
-                <span>English (Subtitles included)</span>
+                <span>English (CC)</span>
               </div>
             </div>
 
-            {/* Instructor snippet */}
-            <div className="flex items-center gap-3 pt-4 border-t border-slate-800">
-              <img
-                src={instructorAvatar}
-                alt={instructorName}
-                className="w-10 h-10 rounded-full object-cover border border-slate-700"
-              />
-              <div>
-                <p className="text-xs text-slate-400">Created by</p>
-                <p className="text-sm font-bold text-white font-heading">{instructorName}</p>
+            {/* Instructor Info */}
+            <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={instructorAvatar}
+                  alt={instructorName}
+                  className="w-11 h-11 rounded-full object-cover border-2 border-indigo-500 shadow-md"
+                />
+                <div>
+                  <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wider">Instructor</p>
+                  <p className="text-sm font-bold text-white font-heading flex items-center gap-1.5">
+                    {instructorName}
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  </p>
+                </div>
               </div>
+
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Share</span>
+              </button>
             </div>
 
           </div>
         </div>
       </div>
 
-      {/* 2. Main Content Grid (Curriculum + Sticky Pricing Card) */}
+      {/* ── 2. Content Grid (Main Details + Sticky Purchase Card) ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
           
-          {/* Left Column: Learning Points & Curriculum */}
-          <div className="lg:col-span-2 space-y-10">
+          {/* Left Column: Course Specs, Learning Goals, Curriculum */}
+          <div className="lg:col-span-2 space-y-8">
             
-            {/* What You'll Learn Box */}
-            <Card className="p-6 space-y-4 bg-[#F8F9FC]">
-              <h2 className="text-lg font-bold font-heading text-gray-900">What You'll Learn</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* What You'll Learn Grid Card */}
+            <Card className="p-6 space-y-4 bg-white border border-gray-200 shadow-soft">
+              <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
+                <Sparkles className="w-5 h-5 text-[#4F46E5]" />
+                <h2 className="text-lg font-bold font-heading text-gray-900">What You'll Learn</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                 {(course.learningPoints || [
                   'Master Production Architecture & Code Standards',
                   'Build Full-Stack Applications with Real-time APIs',
+                  'Deploy Cloud Applications with CI/CD Pipelines',
+                  'Implement Security & User Authentication Best Practices',
                 ]).map((point, idx) => (
-                  <div key={idx} className="flex items-start gap-2 text-xs text-gray-700">
+                  <div key={idx} className="flex items-start gap-2.5 text-xs text-gray-700">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span>{point}</span>
+                    <span className="leading-relaxed">{point}</span>
                   </div>
                 ))}
               </div>
             </Card>
 
-            {/* Curriculum Accordion */}
+            {/* Course Content / Syllabus Accordion */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200 pb-3">
                 <div>
-                  <h2 className="text-xl font-bold font-heading text-gray-900">Course Content</h2>
-                  <p className="text-xs text-gray-500">
-                    {course.curriculum?.length || 0} modules • {course.lecturesCount || 12} lectures
+                  <h2 className="text-xl font-bold font-heading text-gray-900">Course Syllabus & Curriculum</h2>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {course.curriculum?.length || 0} modules • {course.lecturesCount || 12} total lectures
                   </p>
                 </div>
               </div>
 
               {(course.curriculum || []).length > 0 ? (
-                <div className="space-y-3 border border-gray-200 rounded-[12px] overflow-hidden bg-white">
+                <div className="space-y-3 border border-gray-200 rounded-[14px] overflow-hidden bg-white shadow-soft">
                   {course.curriculum.map((module, index) => {
                     const isOpen = openModuleIndex === index;
                     return (
                       <div key={index} className="border-b border-gray-100 last:border-0">
                         <button
                           onClick={() => toggleModule(index)}
-                          className="w-full flex items-center justify-between p-4 bg-gray-50/70 hover:bg-gray-100/70 transition-colors text-left cursor-pointer"
+                          className="w-full flex items-center justify-between p-4 bg-gray-50/80 hover:bg-indigo-50/50 transition-colors text-left cursor-pointer"
                         >
                           <div className="flex items-center gap-3">
                             {isOpen ? (
-                              <ChevronUp className="w-4 h-4 text-indigo-600" />
+                              <ChevronUp className="w-4 h-4 text-[#4F46E5]" />
                             ) : (
                               <ChevronDown className="w-4 h-4 text-gray-400" />
                             )}
                             <span className="text-xs font-bold font-heading text-gray-900">
-                              {module.moduleTitle}
+                              Module {index + 1}: {module.moduleTitle}
                             </span>
                           </div>
-                          <span className="text-[11px] font-mono text-gray-500">{module.duration}</span>
+                          <span className="text-[11px] font-mono font-semibold text-gray-500">{module.duration}</span>
                         </button>
 
                         {isOpen && (
-                          <div className="p-3 bg-white space-y-2">
+                          <div className="p-3 bg-white space-y-2 divide-y divide-gray-50">
                             {module.lessons?.map((lesson, lIdx) => (
                               <div
                                 key={lIdx}
-                                className="flex items-center justify-between p-2 rounded-md hover:bg-indigo-50/40 text-xs transition-colors"
+                                className="flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 text-xs transition-colors"
                               >
-                                <div className="flex items-center gap-2">
-                                  <PlayCircle className="w-4 h-4 text-indigo-500" />
-                                  <span className="font-medium text-gray-800">{lesson.title}</span>
+                                <div className="flex items-center gap-2.5">
+                                  <PlayCircle className="w-4 h-4 text-[#4F46E5]" />
+                                  <span className="font-semibold text-gray-800">{lesson.title}</span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                   {lesson.isPreview && (
                                     <button
                                       onClick={() => handleOpenPreview(lesson)}
-                                      className="text-[11px] font-bold text-[#4F46E5] underline cursor-pointer"
+                                      className="px-2 py-0.5 text-[10px] font-bold text-[#4F46E5] bg-indigo-50 rounded hover:bg-indigo-100 transition-colors cursor-pointer"
                                     >
                                       Preview Video
                                     </button>
@@ -234,26 +282,32 @@ export const CourseDetails = () => {
                   })}
                 </div>
               ) : (
-                <Card className="p-6 text-center text-xs text-gray-500">
-                  Curriculum modules are being finalized by the instructor.
+                <Card className="p-8 text-center space-y-2 bg-white">
+                  <FileText className="w-8 h-8 text-gray-400 mx-auto" />
+                  <p className="text-xs font-bold text-gray-700">Curriculum Modules Coming Soon</p>
+                  <p className="text-[11px] text-gray-400">The instructor is currently uploading video lectures for this course.</p>
                 </Card>
               )}
             </div>
 
-            {/* Instructor Bio */}
-            <Card className="p-6 space-y-4">
-              <h2 className="text-lg font-bold font-heading text-gray-900">Meet Your Instructor</h2>
-              <div className="flex items-start gap-4">
+            {/* Instructor Profile Box */}
+            <Card className="p-6 space-y-4 bg-white border border-gray-200 shadow-soft">
+              <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
+                About the Instructor
+              </h2>
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 <img
                   src={instructorAvatar}
                   alt={instructorName}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-indigo-100"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-indigo-100 shrink-0"
                 />
-                <div className="space-y-1">
-                  <h3 className="text-base font-bold font-heading text-gray-900">{instructorName}</h3>
-                  <p className="text-xs text-[#4F46E5] font-semibold">Faculty Specialist</p>
-                  <p className="text-xs text-gray-600 leading-relaxed pt-1">
-                    {course.instructor?.bio || 'Experienced engineering instructor dedicated to building hands-on curriculum.'}
+                <div className="space-y-1.5">
+                  <h3 className="text-base font-bold font-heading text-gray-900 flex items-center gap-2">
+                    {instructorName}
+                    <Badge variant="primary" size="sm">VERIFIED FACULTY</Badge>
+                  </h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">
+                    {course.instructor?.bio || 'Senior software engineer and lead instructor committed to delivering world-class curriculum.'}
                   </p>
                 </div>
               </div>
@@ -264,60 +318,89 @@ export const CourseDetails = () => {
           {/* Right Column: Sticky Pricing & Enrollment Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-20">
-              <Card className="p-6 space-y-6 shadow-soft-lg border-2 border-indigo-100">
-                {/* Thumbnail Preview */}
-                <div className="relative h-44 rounded-[8px] overflow-hidden group cursor-pointer" onClick={() => setIsPreviewModalOpen(true)}>
-                  <img src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600'} alt={course.title} className="w-full h-full object-cover" />
+              <Card className="p-6 space-y-6 shadow-soft-lg border-2 border-indigo-100 bg-white">
+                
+                {/* Thumbnail Preview Container */}
+                <div
+                  className="relative h-48 rounded-[12px] overflow-hidden group cursor-pointer border border-gray-200"
+                  onClick={() => setIsPreviewModalOpen(true)}
+                >
+                  <img
+                    src={course.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600'}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
                   <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center group-hover:bg-gray-900/50 transition-colors">
-                    <div className="w-12 h-12 rounded-full bg-white text-[#4F46E5] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <div className="w-14 h-14 rounded-full bg-white text-[#4F46E5] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                       <PlayCircle className="w-8 h-8" />
                     </div>
                   </div>
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold text-white bg-slate-900/80 px-2 py-0.5 rounded backdrop-blur-xs">
+                    Preview Video Lesson
+                  </span>
                 </div>
 
-                {/* Price */}
+                {/* Price Display */}
                 <div className="space-y-1">
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-3">
                     <span className="text-3xl font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
-                    {course.originalPrice > 0 && (
-                      <span className="text-sm text-gray-400 line-through font-mono">₹{course.originalPrice}</span>
+                    {originalPrice > 0 && (
+                      <span className="text-sm text-gray-400 line-through font-mono">₹{originalPrice}</span>
                     )}
-                    <Badge variant="amber" size="sm">SPECIAL OFFER</Badge>
+                    <Badge variant="amber" size="sm">LIMITED OFFER</Badge>
                   </div>
+                  <p className="text-[11px] text-red-500 font-semibold flex items-center gap-1">
+                    <span>🔥 Special launch price discount active</span>
+                  </p>
                 </div>
 
                 {/* Buttons */}
-                <div className="space-y-2">
-                  <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/student/my-learning')}>
+                <div className="space-y-2.5">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    onClick={() => navigate('/student/cart')}
+                  >
                     Enroll Now
                   </Button>
-                  <Button variant="outline" size="md" fullWidth onClick={() => navigate('/student/wishlist')}>
-                    Add to Wishlist
+                  
+                  <Button
+                    variant="outline"
+                    size="md"
+                    fullWidth
+                    onClick={() => {
+                      setIsWishlisted(!isWishlisted);
+                      toast.info(isWishlisted ? 'Removed from Wishlist' : 'Saved to Wishlist!');
+                    }}
+                  >
+                    {isWishlisted ? '❤️ Saved in Wishlist' : '🤍 Add to Wishlist'}
                   </Button>
                 </div>
 
-                {/* Course Features Guarantee */}
-                <div className="space-y-2 text-xs text-gray-600 pt-2 border-t border-gray-100">
+                {/* Course Features */}
+                <div className="space-y-2.5 text-xs text-gray-600 pt-3 border-t border-gray-100">
                   <p className="font-bold text-gray-900 font-heading">This course includes:</p>
-                  <ul className="space-y-1.5 text-xs">
-                    <li className="flex items-center gap-2">
-                      <Clock className="w-3.5 h-3.5 text-[#4F46E5]" />
+                  <ul className="space-y-2 text-xs">
+                    <li className="flex items-center gap-2 text-gray-700">
+                      <Clock className="w-4 h-4 text-[#4F46E5]" />
                       <span>On-demand video lectures</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <BookOpen className="w-3.5 h-3.5 text-[#4F46E5]" />
+                    <li className="flex items-center gap-2 text-gray-700">
+                      <BookOpen className="w-4 h-4 text-[#4F46E5]" />
                       <span>Full lifetime access</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <Award className="w-3.5 h-3.5 text-amber-500" />
+                    <li className="flex items-center gap-2 text-gray-700">
+                      <Award className="w-4 h-4 text-amber-500" />
                       <span>Certificate of Completion</span>
                     </li>
-                    <li className="flex items-center gap-2">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <li className="flex items-center gap-2 text-gray-700">
+                      <ShieldCheck className="w-4 h-4 text-emerald-500" />
                       <span>30-Day Money-Back Guarantee</span>
                     </li>
                   </ul>
                 </div>
+
               </Card>
             </div>
           </div>
@@ -333,9 +416,9 @@ export const CourseDetails = () => {
         size="lg"
       >
         <div className="space-y-4 text-center">
-          <div className="h-64 bg-slate-900 rounded-[8px] flex items-center justify-center text-white space-y-2 flex-col">
-            <PlayCircle className="w-12 h-12 text-[#F59E0B] animate-pulse" />
-            <p className="text-xs text-slate-400">Sample video lesson preview playing...</p>
+          <div className="h-64 bg-slate-900 rounded-[12px] flex items-center justify-center text-white space-y-2 flex-col">
+            <PlayCircle className="w-14 h-14 text-[#F59E0B] animate-pulse" />
+            <p className="text-xs text-slate-300">Sample video lesson playing...</p>
           </div>
           <Button variant="primary" onClick={() => setIsPreviewModalOpen(false)}>
             Close Video
