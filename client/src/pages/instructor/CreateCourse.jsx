@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ArrowRight, ArrowLeft, Upload, DollarSign, BookOpen } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ArrowLeft, Upload, IndianRupee, BookOpen } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -24,8 +24,8 @@ export const CreateCourse = () => {
   const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600');
 
   // Step 2 Form
-  const [price, setPrice] = useState('89.99');
-  const [originalPrice, setOriginalPrice] = useState('149.99');
+  const [price, setPrice] = useState('1499');
+  const [originalPrice, setOriginalPrice] = useState('2999');
   const [learningPoints, setLearningPoints] = useState([
     'Master React 19 Server Actions & Hooks',
     'Design RESTful & GraphQL APIs',
@@ -218,17 +218,17 @@ export const CreateCourse = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Listing Price ($ USD)"
+              label="Listing Price (₹ INR)"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              leftIcon={DollarSign}
+              leftIcon={IndianRupee}
               isRequired
             />
             <Input
-              label="Original / List Price ($ USD)"
+              label="Original / List Price (₹ INR)"
               value={originalPrice}
               onChange={(e) => setOriginalPrice(e.target.value)}
-              leftIcon={DollarSign}
+              leftIcon={IndianRupee}
             />
           </div>
 
