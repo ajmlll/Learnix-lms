@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, CheckCircle2, XCircle } from 'lucide-react';
+import { BookOpen, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -67,6 +67,16 @@ export const ManageCourses = () => {
       fetchCourses();
     } catch (err) {
       toast.error(err.message || 'Failed to reject course');
+    }
+  };
+
+  const handleDeleteCourse = async (id, title) => {
+    try {
+      await courseService.deleteCourse(id);
+      toast.info(`Course "${title}" deleted.`);
+      fetchCourses();
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete course');
     }
   };
 
@@ -161,17 +171,26 @@ export const ManageCourses = () => {
                         <td className="p-4 font-semibold text-gray-800">{instructorName}</td>
                         <td className="p-4">{catName}</td>
                         <td className="p-4">{getStatusBadge(c.status)}</td>
-                        <td className="p-4 font-mono font-bold text-gray-900">${c.price || 0}</td>
+                        <td className="p-4 font-mono font-bold text-gray-900">₹{c.price || 0}</td>
                         <td className="p-4 text-right">
-                          {c.status === 'pending' || c.status === 'pending_review' ? (
-                            <Button variant="amber" size="sm" onClick={() => handleOpenReview(c)}>
-                              Review Submission
-                            </Button>
-                          ) : (
-                            <Button variant="secondary" size="sm" onClick={() => handleOpenReview(c)}>
-                              View Details
-                            </Button>
-                          )}
+                          <div className="flex items-center justify-end gap-2">
+                            {c.status === 'pending' || c.status === 'pending_review' ? (
+                              <Button variant="amber" size="sm" onClick={() => handleOpenReview(c)}>
+                                Review Submission
+                              </Button>
+                            ) : (
+                              <Button variant="secondary" size="sm" onClick={() => handleOpenReview(c)}>
+                                View Details
+                              </Button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteCourse(courseId, c.title)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                              title="Delete Course"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
