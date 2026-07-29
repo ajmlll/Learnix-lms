@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, ArrowRight, ArrowLeft, Upload, IndianRupee, BookOpen } from 'lucide-react';
+import { CheckCircle2, ArrowRight, ArrowLeft, Upload, IndianRupee, RotateCcw } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
@@ -10,35 +10,51 @@ import { toast } from 'react-toastify';
 
 export const CreateCourse = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+
+  // Read saved draft from sessionStorage on initial load
+  const savedDraft = (() => {
+    try {
+      const raw = sessionStorage.getItem('learnix_course_draft');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const [currentStep, setCurrentStep] = useState(savedDraft?.currentStep || 1);
 
   // Categories list from API
   const [categoriesList, setCategoriesList] = useState([]);
 
   // Step 1 Form
-  const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [level, setLevel] = useState('intermediate');
-  const [description, setDescription] = useState('');
-  const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600');
+  const [title, setTitle] = useState(savedDraft?.title || '');
+  const [subtitle, setSubtitle] = useState(savedDraft?.subtitle || '');
+  const [category, setCategory] = useState(savedDraft?.category || '');
+  const [level, setLevel] = useState(savedDraft?.level || 'intermediate');
+  const [description, setDescription] = useState(savedDraft?.description || '');
+  const [thumbnail, setThumbnail] = useState(
+    savedDraft?.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600'
+  );
 
   // Step 2 Form
-  const [price, setPrice] = useState('1499');
-  const [originalPrice, setOriginalPrice] = useState('2999');
-  const [learningPoints, setLearningPoints] = useState([
-    'Master React 19 Server Actions & Hooks',
-    'Design RESTful & GraphQL APIs',
-  ]);
+  const [price, setPrice] = useState(savedDraft?.price || '1499');
+  const [originalPrice, setOriginalPrice] = useState(savedDraft?.originalPrice || '2999');
+  const [learningPoints, setLearningPoints] = useState(
+    savedDraft?.learningPoints || [
+      'Master React 19 Server Actions & Hooks',
+      'Design RESTful & GraphQL APIs',
+    ]
+  );
   const [newPoint, setNewPoint] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
 
+  // Fetch categories
   useEffect(() => {
     const fetchCats = async () => {
       try {
         const data = await courseService.getCategories();
         setCategoriesList(data || []);
-        if (data && data.length > 0) {
+        if (data && data.length > 0 && !category) {
           setCategory(data[0]._id || data[0].id || data[0].name);
         }
       } catch (err) {
@@ -47,6 +63,42 @@ export const CreateCourse = () => {
     };
     fetchCats();
   }, []);
+
+  // Save form draft to sessionStorage automatically on every input change
+  useEffect(() => {
+    const draftPayload = {
+      currentStep,
+      title,
+      subtitle,
+      category,
+      level,
+      description,
+      thumbnail,
+      price,
+      originalPrice,
+      learningPoints,
+    };
+    try {
+      sessionStorage.setItem('learnix_course_draft', JSON.stringify(draftPayload));
+    } catch (e) {
+      console.error('[CreateCourse Draft Save Error]:', e);
+    }
+  }, [currentStep, title, subtitle, category, level, description, thumbnail, price, originalPrice, learningPoints]);
+
+  const handleClearDraft = () => {
+    sessionStorage.removeItem('learnix_course_draft');
+    setTitle('');
+    setSubtitle('');
+    setDescription('');
+    setPrice('1499');
+    setOriginalPrice('2999');
+    setLearningPoints([
+      'Master React 19 Server Actions & Hooks',
+      'Design RESTful & GraphQL APIs',
+    ]);
+    setCurrentStep(1);
+    toast.info('Form cleared.');
+  };
 
   const handleAddPoint = (e) => {
     e.preventDefault();
@@ -81,6 +133,9 @@ export const CreateCourse = () => {
         status: 'pending',
       });
 
+      // Clear draft on successful creation
+      sessionStorage.removeItem('learnix_course_draft');
+
       toast.success(`🎉 Course "${title}" submitted for QA review!`);
       navigate('/instructor/my-courses');
     } catch (err) {
@@ -97,7 +152,12 @@ export const CreateCourse = () => {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[12px] border border-gray-200 shadow-soft">
         <div className="space-y-1">
-          <Badge variant="amber" size="sm" hasDot>FACULTY STUDIO</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="amber" size="sm" hasDot>FACULTY STUDIO</Badge>
+            {savedDraft && (
+              <Badge variant="success" size="sm">AUTO-SAVED DRAFT</Badge>
+            )}
+          </div>
           <h1 className="text-2xl font-bold font-heading text-gray-900">
             Create New Course Curriculum
           </h1>
@@ -105,6 +165,17 @@ export const CreateCourse = () => {
             Draft your course outline, set pricing, and submit for quality assurance review.
           </p>
         </div>
+
+        {savedDraft && (
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={RotateCcw}
+            onClick={handleClearDraft}
+          >
+            Clear Draft Form
+          </Button>
+        )}
       </div>
 
       {/* Progress Steps Indicator */}
