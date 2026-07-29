@@ -19,7 +19,7 @@ export const CreateCourse = () => {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [category, setCategory] = useState('');
-  const [level, setLevel] = useState('Intermediate');
+  const [level, setLevel] = useState('intermediate');
   const [description, setDescription] = useState('');
   const [thumbnail, setThumbnail] = useState('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600');
 
@@ -172,10 +172,10 @@ export const CreateCourse = () => {
                 onChange={(e) => setLevel(e.target.value)}
                 className="w-full text-xs font-semibold bg-white border border-gray-200 rounded-[8px] p-2.5 outline-none"
               >
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-                <option value="All Levels">All Levels</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+                <option value="all">All Levels</option>
               </select>
             </div>
           </div>

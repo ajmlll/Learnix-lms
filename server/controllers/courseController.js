@@ -42,6 +42,10 @@ export const createCourse = async (req, res, next) => {
 
     const slug = slugify(title);
 
+    const rawLevel = (level || 'beginner').toString().toLowerCase();
+    const normalizedLevel = rawLevel.includes('all') ? 'all' : (['beginner', 'intermediate', 'advanced'].includes(rawLevel) ? rawLevel : 'beginner');
+    const courseStatus = req.body.status && ['draft', 'pending', 'published'].includes(req.body.status) ? req.body.status : 'pending';
+
     const course = await Course.create({
       title,
       slug,
@@ -49,11 +53,11 @@ export const createCourse = async (req, res, next) => {
       category,
       price: price || 0,
       discountPrice: discountPrice || 0,
-      level: level || 'beginner',
+      level: normalizedLevel,
       thumbnail: thumbnail || (req.file ? req.file.path : ''),
       instructor: req.user._id,
-      status: 'draft',
-      isPublished: false,
+      status: courseStatus,
+      isPublished: courseStatus === 'published',
     });
 
     await invalidateCourseCache(course._id);
