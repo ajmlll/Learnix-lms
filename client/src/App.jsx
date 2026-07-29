@@ -51,7 +51,6 @@ import InstructorDashboard from './pages/instructor/InstructorDashboard';
 import InstructorMyCourses from './pages/instructor/MyCourses';
 import CreateCourse from './pages/instructor/CreateCourse';
 import ManageCurriculum from './pages/instructor/ManageCurriculum';
-import CreateQuiz from './pages/instructor/CreateQuiz';
 import Discussions from './pages/instructor/Discussions';
 import Reviews from './pages/instructor/Reviews';
 import Earnings from './pages/instructor/Earnings';
@@ -144,7 +143,6 @@ export function App() {
           <Route path="/instructor/my-courses" element={<InstructorMyCourses />} />
           <Route path="/instructor/create-course" element={<CreateCourse />} />
           <Route path="/instructor/manage-curriculum" element={<ManageCurriculum />} />
-          <Route path="/instructor/create-quiz" element={<CreateQuiz />} />
           <Route path="/instructor/discussions" element={<Discussions />} />
           <Route path="/instructor/reviews" element={<Reviews />} />
           <Route path="/instructor/earnings" element={<Earnings />} />

@@ -31,7 +31,6 @@ export const InstructorLayout = () => {
     { label: 'My Courses', path: '/instructor/my-courses', icon: BookOpen, badge: '4 Created' },
     { label: 'Create Course', path: '/instructor/create-course', icon: PlusCircle },
     { label: 'Curriculum Builder', path: '/instructor/manage-curriculum', icon: Layers },
-    { label: 'Quiz Builder', path: '/instructor/create-quiz', icon: HelpCircle },
     { label: 'Q&A Discussions', path: '/instructor/discussions', icon: MessageSquare, badge: '1 New' },
     { label: 'Student Reviews', path: '/instructor/reviews', icon: Star, badge: '4.9 ★' },
     { label: 'Revenue & Earnings', path: '/instructor/earnings', icon: DollarSign, badge: '$21.3k' },

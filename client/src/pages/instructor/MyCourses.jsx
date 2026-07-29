@@ -151,13 +151,6 @@ export const MyCourses = () => {
                               <Layers className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => navigate('/instructor/create-quiz')}
-                              className="p-1.5 text-gray-600 hover:text-[#F59E0B] hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
-                              title="Quiz Builder"
-                            >
-                              <HelpCircle className="w-4 h-4" />
-                            </button>
-                            <button
                               onClick={() => handleDeleteCourse(courseId, c.title)}
                               className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                               title="Delete Course"
@@ -206,9 +199,6 @@ export const MyCourses = () => {
                     <div className="flex items-center justify-end gap-2 pt-1">
                       <Button variant="secondary" size="sm" leftIcon={Layers} onClick={() => navigate('/instructor/manage-curriculum')}>
                         Curriculum
-                      </Button>
-                      <Button variant="outline" size="sm" leftIcon={HelpCircle} onClick={() => navigate('/instructor/create-quiz')}>
-                        Quizzes
                       </Button>
                     </div>
                   </div>
