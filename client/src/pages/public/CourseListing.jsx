@@ -269,10 +269,10 @@ export const CourseListing = () => {
 
                     <div className="p-4 space-y-2">
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{course.category}</span>
+                        <span>{typeof course.category === 'object' ? (course.category?.name || 'General') : (course.category || 'General')}</span>
                         <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
                           <Star className="w-3.5 h-3.5 fill-amber-400" />
-                          {course.rating}
+                          {course.rating || 5.0}
                         </span>
                       </div>
 
@@ -281,24 +281,23 @@ export const CourseListing = () => {
                       </h3>
 
                       <p className="text-xs text-gray-500 line-clamp-2">
-                        {course.subtitle}
+                        {course.subtitle || course.description}
                       </p>
 
                       <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
                         <img
-                          src={course.instructor.avatar}
-                          alt={course.instructor.name}
+                          src={typeof course.instructor === 'object' ? (course.instructor?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250') : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'}
+                          alt="Instructor"
                           className="w-5 h-5 rounded-full object-cover"
                         />
-                        <span className="truncate text-gray-700">{course.instructor.name}</span>
-                        <span className="ml-auto font-mono text-[11px]">{course.duration}</span>
+                        <span>{typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member')}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="px-4 py-3 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-base font-extrabold font-mono text-gray-900">${course.price}</span>
+                  <div className="p-4 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
+                    <div className="flex items-baseline gap-1 font-mono">
+                      <span className="text-lg font-bold text-gray-900">₹{course.price || 0}</span>
                       <span className="text-xs text-gray-400 line-through font-mono">${course.originalPrice}</span>
                     </div>
                     <Button

@@ -249,10 +249,10 @@ export const Home = () => {
                 {/* Body */}
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
-                    <span>{course.category}</span>
+                    <span>{typeof course.category === 'object' ? (course.category?.name || 'General') : (course.category || 'General')}</span>
                     <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
                       <Star className="w-3.5 h-3.5 fill-amber-400" />
-                      {course.rating} ({course.reviewCount})
+                      {course.rating || 5.0} ({course.reviewCount || 0})
                     </span>
                   </div>
 
@@ -261,17 +261,17 @@ export const Home = () => {
                   </h3>
 
                   <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                    {course.subtitle}
+                    {course.subtitle || course.description}
                   </p>
 
                   <div className="flex items-center gap-2 pt-1 border-t border-gray-100 text-xs text-gray-500">
                     <img
-                      src={course.instructor.avatar}
-                      alt={course.instructor.name}
+                      src={typeof course.instructor === 'object' ? (course.instructor?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250') : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'}
+                      alt="Instructor"
                       className="w-6 h-6 rounded-full object-cover"
                     />
-                    <span className="font-medium text-gray-700">{course.instructor.name}</span>
-                    <span className="ml-auto font-mono text-[11px]">{course.duration}</span>
+                    <span className="font-medium text-gray-700">{typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member')}</span>
+                    <span className="ml-auto font-mono text-[11px]">{course.duration || 'Self-paced'}</span>
                   </div>
                 </div>
               </div>
@@ -279,8 +279,8 @@ export const Home = () => {
               {/* Card Footer Price */}
               <div className="px-5 py-3 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-extrabold font-mono text-gray-900">${course.price}</span>
-                  <span className="text-xs text-gray-400 line-through font-mono">${course.originalPrice}</span>
+                  <span className="text-lg font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
+                  <span className="text-xs text-gray-400 line-through font-mono">₹{course.originalPrice || (course.price ? course.price * 1.5 : 0)}</span>
                 </div>
                 <Button
                   variant="primary"
