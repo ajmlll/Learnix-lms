@@ -1,12 +1,9 @@
+import 'dotenv/config';
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
-
-// Load environment variables
-dotenv.config();
 
 import connectDB from './config/db.js';
 import redisClient, { connectRedis } from './config/redis.js';

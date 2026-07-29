@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createClient } from 'redis';
 import { Redis as UpstashRedis } from '@upstash/redis';
 
@@ -16,12 +17,16 @@ if (redisUrl && redisUrl.startsWith('http')) {
     });
     console.log('[Redis] Initialized Upstash HTTP REST client');
   } else {
-    console.warn('[Redis] Upstash HTTPS URL detected but UPSTASH_REDIS_REST_TOKEN is missing in .env. Skipping Redis connection.');
+    console.warn('[Redis] Upstash HTTPS URL detected but UPSTASH_REDIS_REST_TOKEN is missing in .env.');
   }
-} else if (redisUrl && redisUrl.startsWith('redis')) {
+} else if (redisUrl && (redisUrl.startsWith('redis://') || redisUrl.startsWith('rediss://'))) {
+  const isSsl = redisUrl.startsWith('rediss://');
+
   redisClient = createClient({
     url: redisUrl,
     socket: {
+      tls: isSsl,
+      rejectUnauthorized: false,
       reconnectStrategy: (retries) => {
         if (retries > 3) {
           console.warn('[Redis] Max reconnection attempts reached. Continuing without Redis.');
@@ -33,10 +38,12 @@ if (redisUrl && redisUrl.startsWith('http')) {
   });
 
   redisClient.on('connect', () => console.log('[Redis] Client connecting...'));
-  redisClient.on('ready', () => console.log('[Redis] Connection established and ready'));
+  redisClient.on('ready', () => {
+    console.log('[Redis] Connection established and ready');
+  });
   redisClient.on('error', (err) => console.error(`[Redis Error]: ${err.message}`));
 } else {
-  console.warn('[Redis] No valid REDIS_URL provided. Skipping Redis client initialization.');
+  console.warn('[Redis] No valid REDIS_URL provided in .env.');
 }
 
 export const connectRedis = async () => {
@@ -49,7 +56,7 @@ export const connectRedis = async () => {
       console.warn(`[Redis Upstash Ping Warning]: ${err.message}`);
       redisClient.isOpen = false;
     }
-  } else if (redisClient.connect) {
+  } else if (redisClient && redisClient.connect) {
     try {
       await redisClient.connect();
     } catch (error) {
