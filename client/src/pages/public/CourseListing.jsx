@@ -114,22 +114,25 @@ export const CourseListing = () => {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                All Categories ({COURSES.length})
+                All Categories ({courses.length})
               </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`w-full text-left px-3 py-1.5 rounded-[8px] text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
-                    selectedCategory === cat.id
-                      ? 'bg-[#4F46E5] text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <span>{cat.name}</span>
-                  <span className="text-[10px] opacity-75 font-mono">({cat.count})</span>
-                </button>
-              ))}
+              {categories.map((cat) => {
+                const catId = cat.id || cat._id;
+                return (
+                  <button
+                    key={catId}
+                    onClick={() => setSelectedCategory(catId)}
+                    className={`w-full text-left px-3 py-1.5 rounded-[8px] text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                      selectedCategory === catId
+                        ? 'bg-[#4F46E5] text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span>{cat.name}</span>
+                    <span className="text-[10px] opacity-75 font-mono">({cat.count || 0})</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

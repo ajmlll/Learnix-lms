@@ -68,13 +68,13 @@ export const MyCourses = () => {
 
       {/* Filter Tabs & Search Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-[12px] border border-gray-200 shadow-soft">
-        
-        {/* Tabs */}
-        <div className="flex items-center gap-2">
+      {/* Filter Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
           {[
-            { id: 'all', label: 'All Courses', count: STUDENT_COURSES.length },
-            { id: 'in-progress', label: 'In Progress', count: STUDENT_COURSES.filter((c) => c.status === 'in-progress').length },
-            { id: 'completed', label: 'Completed', count: STUDENT_COURSES.filter((c) => c.status === 'completed').length },
+            { id: 'all', label: 'All Courses', count: courses.length },
+            { id: 'in-progress', label: 'In Progress', count: courses.filter((c) => c.status === 'in-progress').length },
+            { id: 'completed', label: 'Completed', count: courses.filter((c) => c.status === 'completed').length },
           ].map((tab) => (
             <button
               key={tab.id}

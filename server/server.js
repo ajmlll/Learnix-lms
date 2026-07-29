@@ -69,6 +69,14 @@ app.use('/api/discussions', discussionRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Root API Info Endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Learnix LMS REST API is active. Access endpoints under /api/auth, /api/courses, /api/health, etc.',
+  });
+});
+
 // Health Check Route
 app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';

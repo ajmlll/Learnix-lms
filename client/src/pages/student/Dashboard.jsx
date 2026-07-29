@@ -72,8 +72,15 @@ export const Dashboard = () => {
     );
   }
 
-  const inProgressCourses = STUDENT_COURSES.filter((sc) => sc.status === 'in-progress');
-  const activeMissionCourse = inProgressCourses[0] || STUDENT_COURSES[0];
+  const inProgressCourses = courses.filter((sc) => sc.status === 'in-progress');
+  const activeMissionCourse = inProgressCourses[0] || courses[0] || {
+    progressPercent: 0,
+    progress: 0,
+    course: { title: 'Explore Courses', thumbnail: '' },
+    courseId: '',
+  };
+
+  const progressVal = activeMissionCourse.progressPercent || activeMissionCourse.progress || 0;
 
   return (
     <div className="space-y-8 font-sans">
@@ -90,18 +97,18 @@ export const Dashboard = () => {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold font-heading tracking-tight">
-            Welcome back, {user?.name || 'Alex'}! 👋
+            Welcome back, {user?.name || 'Learner'}! 👋
           </h1>
 
           <p className="text-xs sm:text-sm text-indigo-100 max-w-xl leading-relaxed">
-            You've completed <strong className="text-amber-300">{activeMissionCourse.progress}%</strong> of your active course: <strong>{activeMissionCourse.course.title}</strong>.
+            You've completed <strong className="text-amber-300">{progressVal}%</strong> of your active course: <strong>{activeMissionCourse.course?.title}</strong>.
           </p>
 
           {/* Progress bar inside mission banner */}
           <div className="w-full max-w-md bg-indigo-950/60 h-2.5 rounded-full overflow-hidden border border-indigo-700/50">
             <div
               className="bg-gradient-to-r from-amber-400 to-amber-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${activeMissionCourse.progress}%` }}
+              style={{ width: `${progressVal}%` }}
             />
           </div>
         </div>
@@ -111,7 +118,7 @@ export const Dashboard = () => {
             variant="amber"
             size="md"
             leftIcon={PlayCircle}
-            onClick={() => navigate(`/student/course/${activeMissionCourse.courseId}/play`)}
+            onClick={() => navigate(activeMissionCourse.courseId ? `/student/course/${activeMissionCourse.courseId}/play` : '/courses')}
           >
             Resume Learning
           </Button>
@@ -128,8 +135,8 @@ export const Dashboard = () => {
             <span className="text-xs font-medium text-gray-500">Enrolled Courses</span>
             <BookOpen className="w-4 h-4 text-[#4F46E5]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-gray-900">{STUDENT_COURSES.length} Total</div>
-          <p className="text-[11px] text-emerald-600 font-medium">+1 completed this month</p>
+          <div className="text-2xl font-bold font-mono text-gray-900">{courses.length} Total</div>
+          <p className="text-[11px] text-emerald-600 font-medium">Active enrollments</p>
         </Card>
 
         <Card className="space-y-1">
@@ -171,13 +178,13 @@ export const Dashboard = () => {
               onClick={() => navigate('/student/my-learning')}
               className="text-xs font-semibold text-[#4F46E5] hover:underline flex items-center gap-1 cursor-pointer"
             >
-              <span>View All Enrolled ({STUDENT_COURSES.length})</span>
+              <span>View All Enrolled ({courses.length})</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
           <div className="space-y-4">
-            {STUDENT_COURSES.map((sc) => (
+            {courses.map((sc) => (
               <Card hoverable key={sc.courseId} className="p-4 space-y-3">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <img

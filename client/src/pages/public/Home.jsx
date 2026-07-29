@@ -167,15 +167,16 @@ export const Home = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {CATEGORIES.map((cat) => {
+          {categories.map((cat) => {
+            const catId = cat.id || cat._id;
             const IconComponent = iconMap[cat.iconName] || Code;
             return (
               <Card
-                key={cat.id}
+                key={catId}
                 hoverable
                 onClick={() => {
-                  setSelectedCategory(cat.id);
-                  navigate(`/courses?category=${cat.id}`);
+                  setSelectedCategory(catId);
+                  navigate(`/courses?category=${catId}`);
                 }}
                 className="p-4 text-center space-y-3 cursor-pointer group"
               >
@@ -186,7 +187,7 @@ export const Home = () => {
                   <h3 className="text-xs font-bold font-heading text-gray-900 group-hover:text-[#4F46E5] transition-colors truncate">
                     {cat.name}
                   </h3>
-                  <p className="text-[11px] text-gray-500 mt-0.5">{cat.count} Courses</p>
+                  <p className="text-[11px] text-gray-500 mt-0.5">{cat.count || 0} Courses</p>
                 </div>
               </Card>
             );
@@ -216,19 +217,22 @@ export const Home = () => {
             >
               All Courses
             </button>
-            {CATEGORIES.slice(0, 4).map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer shrink-0 ${
-                  selectedCategory === cat.id
-                    ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.slice(0, 4).map((cat) => {
+              const catId = cat.id || cat._id;
+              return (
+                <button
+                  key={catId}
+                  onClick={() => setSelectedCategory(catId)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors cursor-pointer shrink-0 ${
+                    selectedCategory === catId
+                      ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 
