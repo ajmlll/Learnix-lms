@@ -24,8 +24,8 @@ export const ManageCourses = () => {
         const res = await adminService.getPendingCourses();
         setCourses(res.data || res.courses || []);
       } else {
-        const res = await courseService.getCourses({ status: activeTab !== 'all' ? activeTab : undefined });
-        setCourses(res.courses || res.data || []);
+        const res = await adminService.getAllCourses({ status: activeTab !== 'all' ? activeTab : undefined });
+        setCourses(res.data || res.courses || []);
       }
     } catch (err) {
       console.error('[ManageCourses API Error]:', err);

@@ -13,6 +13,12 @@ export const adminService = {
     return response.data;
   },
 
+  // Get all courses (Admin catalog moderation view)
+  getAllCourses: async (params = {}) => {
+    const response = await api.get('/admin/courses', { params });
+    return response.data;
+  },
+
   // Approve pending course
   approveCourse: async (id) => {
     const response = await api.patch(`/admin/courses/${id}/approve`);

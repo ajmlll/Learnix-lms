@@ -2,6 +2,7 @@ import express from 'express';
 import {
   getDashboardStats,
   getPendingCourses,
+  getAllCourses,
   approveCourse,
   rejectCourse,
   getAllUsers,
@@ -18,6 +19,7 @@ router.use(protect, authorize('admin'));
 
 router.get('/stats', getDashboardStats);
 router.get('/pending-courses', getPendingCourses);
+router.get('/courses', getAllCourses);
 router.patch('/courses/:id/approve', approveCourse);
 router.patch('/courses/:id/reject', rejectCourse);
 router.get('/users', getAllUsers);

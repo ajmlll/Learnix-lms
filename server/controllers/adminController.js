@@ -143,6 +143,40 @@ export const getPendingCourses = async (req, res, next) => {
   }
 };
 
+// @desc    Get all courses (Admin Catalog View)
+// @route   GET /api/admin/courses
+// @access  Private (Admin Only)
+export const getAllCourses = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.status && req.query.status !== 'all') {
+      query.status = req.query.status;
+    }
+
+    const total = await Course.countDocuments(query);
+    const courses = await Course.find(query)
+      .populate('instructor', 'name email avatar')
+      .populate('category', 'name slug')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: courses.length,
+      total,
+      data: courses,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Approve a pending course
 // @route   PATCH /api/admin/courses/:id/approve
 // @access  Private (Admin Only)
