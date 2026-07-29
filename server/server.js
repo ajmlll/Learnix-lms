@@ -12,6 +12,10 @@ import errorHandler from './middleware/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
+import enrollmentRoutes from './routes/enrollmentRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import { handleWebhook } from './controllers/paymentController.js';
 
 const app = express();
 
@@ -22,6 +26,13 @@ app.use(
     origin: clientUrl,
     credentials: true,
   })
+);
+
+// CRITICAL: Raw body parsing for Stripe Webhook before express.json()
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  handleWebhook
 );
 
 app.use(express.json());
@@ -35,6 +46,9 @@ if (process.env.NODE_ENV !== 'production') {
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
