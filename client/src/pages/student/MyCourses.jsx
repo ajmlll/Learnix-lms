@@ -6,9 +6,11 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { CardSkeleton } from '../../components/common/Skeleton';
+import { useAuth } from '../../context/AuthContext';
 
 export const MyCourses = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,19 +18,27 @@ export const MyCourses = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchEnrolled = async () => {
       setIsLoading(true);
       try {
         const data = await enrollmentService.getMyEnrolledCourses();
-        setCourses(data || []);
+        if (isMounted) {
+          const valid = (data || []).filter((item) => item && item.course);
+          setCourses(valid);
+        }
       } catch (err) {
         console.error('[Student MyCourses API Error]:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchEnrolled();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const filteredCourses = courses.filter((sc) => {
     const matchesTab = activeTab === 'all' || sc.status === activeTab;

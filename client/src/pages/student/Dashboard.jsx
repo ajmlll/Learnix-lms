@@ -37,19 +37,27 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
     const fetchEnrolled = async () => {
       setIsLoading(true);
       try {
         const data = await enrollmentService.getMyEnrolledCourses();
-        setCourses(data || []);
+        if (isMounted) {
+          const valid = (data || []).filter((item) => item && item.course);
+          setCourses(valid);
+        }
       } catch (err) {
         console.error('[Student Dashboard API Error]:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
       }
     };
     fetchEnrolled();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   if (isLoading) {
     return (

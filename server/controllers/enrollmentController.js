@@ -65,10 +65,13 @@ export const getMyCourses = async (req, res, next) => {
       .sort({ enrolledAt: -1 })
       .lean();
 
+    // Filter out any orphaned enrollment records where course was deleted
+    const validEnrollments = enrollments.filter((item) => item.course != null);
+
     res.status(200).json({
       success: true,
-      count: enrollments.length,
-      data: enrollments,
+      count: validEnrollments.length,
+      data: validEnrollments,
     });
   } catch (error) {
     next(error);
