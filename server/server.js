@@ -11,7 +11,10 @@ dotenv.config();
 import connectDB from './config/db.js';
 import redisClient, { connectRedis } from './config/redis.js';
 import errorHandler from './middleware/errorHandler.js';
+
 import authRoutes from './routes/authRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
 
 const app = express();
 
@@ -31,8 +34,10 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Routes
+// Mount Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/courses', courseRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
