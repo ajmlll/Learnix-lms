@@ -18,6 +18,7 @@ import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
 import { upload } from '../middleware/upload.js';
 import { cacheMiddleware } from '../middleware/cache.js';
+import { validateCourse } from '../middleware/validator.js';
 
 const router = express.Router();
 
@@ -25,7 +26,7 @@ const router = express.Router();
 router
   .route('/')
   .get(cacheMiddleware('courses_list', 300), getCourses)
-  .post(protect, authorize('instructor', 'admin'), upload.single('thumbnail'), createCourse);
+  .post(protect, authorize('instructor', 'admin'), upload.single('thumbnail'), validateCourse, createCourse);
 
 // Instructor own courses
 router.get(

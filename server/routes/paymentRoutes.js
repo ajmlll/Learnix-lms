@@ -7,6 +7,7 @@ import {
 } from '../controllers/paymentController.js';
 import { protect } from '../middleware/auth.js';
 import { authorize } from '../middleware/roleCheck.js';
+import { validateCheckout } from '../middleware/validator.js';
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ const router = express.Router();
 router.post('/webhook', handleWebhook);
 
 // Protected student routes
-router.post('/checkout-session', protect, createCheckoutSession);
+router.post('/checkout-session', protect, validateCheckout, createCheckoutSession);
 router.get('/history', protect, getPaymentHistory);
 
 // Protected instructor routes

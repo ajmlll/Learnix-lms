@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import mongoose from 'mongoose';
@@ -26,6 +27,9 @@ import adminRoutes from './routes/adminRoutes.js';
 import { handleWebhook } from './controllers/paymentController.js';
 
 const app = express();
+
+// Security Headers
+app.use(helmet());
 
 // Middlewares
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -75,6 +79,14 @@ app.get('/api/health', (req, res) => {
     db: dbState,
     redis: redisState,
     timestamp: new Date().toISOString(),
+  });
+});
+
+// Global 404 Handler for Unmatched API Routes
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API route '${req.originalUrl}' not found.`,
   });
 });
 

@@ -6,13 +6,14 @@ import {
   deleteReview,
 } from '../controllers/reviewController.js';
 import { protect } from '../middleware/auth.js';
+import { validateReview } from '../middleware/validator.js';
 
 const router = express.Router();
 
 router
   .route('/course/:courseId')
   .get(getCourseReviews)
-  .post(protect, createReview);
+  .post(protect, validateReview, createReview);
 
 router
   .route('/:id')

@@ -1,0 +1,236 @@
+{
+  "info": {
+    "name": "Learnix AI LMS API Collection",
+    "description": "Complete Postman collection for the Learnix MERN LMS Platform Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Student\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register" }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/me" }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"jane@example.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/forgot-password" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories" }
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Web Development\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/categories" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "Get Courses (Public Listing)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/courses?page=1&limit=12&search=react" }
+          }
+        },
+        {
+          "name": "Create Course (Instructor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Mastering Modern React\",\n  \"description\": \"Full-stack course on React & Express\",\n  \"category\": \"<CATEGORY_ID>\",\n  \"price\": 49.99,\n  \"level\": \"intermediate\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/courses" }
+          }
+        },
+        {
+          "name": "Add Section",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Section 1: Foundations\",\n  \"order\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/courses/<COURSE_ID>/sections" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments & Enrollments",
+      "item": [
+        {
+          "name": "Create Checkout Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"<COURSE_ID>\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/payments/checkout-session" }
+          }
+        },
+        {
+          "name": "Get My Enrolled Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/enrollments/my-courses" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gamification & AI",
+      "item": [
+        {
+          "name": "Get Leaderboard (90s Cached)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/gamification/leaderboard" }
+          }
+        },
+        {
+          "name": "Generate AI Lecture Notes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/ai/notes/<COURSE_ID>/<LECTURE_ID>" }
+          }
+        },
+        {
+          "name": "Execute Code (Judge0)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"language\": \"javascript\",\n  \"code\": \"console.log('Hello Learnix AI!');\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/code/execute" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Certificates & Admin",
+      "item": [
+        {
+          "name": "Verify Certificate (Public)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/certificates/verify/CERT-123456" }
+          }
+        },
+        {
+          "name": "Admin Dashboard Analytics (300s Cached)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/admin/stats" }
+          }
+        }
+      ]
+    }
+  ]
+}
