@@ -14,25 +14,32 @@ import {
   Globe,
   ArrowLeft,
   Share2,
-  Heart,
   FileText,
   Sparkles,
-  Lock,
+  Play,
+  ShoppingCart,
+  ArrowRight,
 } from 'lucide-react';
 import courseService from '../../services/courseService';
+import enrollmentService from '../../services/enrollmentService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { CardSkeleton } from '../../components/common/Skeleton';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { toast } from 'react-toastify';
 
 export const CourseDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToCart, isInCart, isEnrolled, isEnrollmentsLoading, refetchEnrollments } = useCart();
 
   const [course, setCourse] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isActionProcessing, setIsActionProcessing] = useState(false);
   const [openModuleIndex, setOpenModuleIndex] = useState(0);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [activePreviewLesson, setActivePreviewLesson] = useState(null);
@@ -69,6 +76,28 @@ export const CourseDetails = () => {
     }
   };
 
+  // ── Action Handlers ──
+  const handleEnrollFree = async () => {
+    setIsActionProcessing(true);
+    try {
+      await enrollmentService.enroll(course._id || course.id);
+      await refetchEnrollments();
+      toast.success('🎉 Successfully enrolled in free course!');
+      navigate('/student/my-learning');
+    } catch (err) {
+      console.error('[Free Enroll Error]:', err);
+      toast.error(err.message || 'Failed to enroll in free course.');
+    } finally {
+      setIsActionProcessing(false);
+    }
+  };
+
+  const handleBuyNow = () => {
+    addToCart(course);
+    toast.success('🛒 Added to cart!');
+    navigate('/student/cart');
+  };
+
   if (isLoading) {
     return (
       <div className="py-12 px-4 max-w-7xl mx-auto space-y-8 font-sans">
@@ -97,18 +126,109 @@ export const CourseDetails = () => {
     );
   }
 
+  const courseId = (course._id || course.id)?.toString();
   const categoryName = typeof course.category === 'object' ? (course.category?.name || 'General') : (course.category || 'General');
   const instructorName = typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member');
   const instructorAvatar = typeof course.instructor === 'object' ? (course.instructor?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250') : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250';
 
   const originalPrice = course.originalPrice || (course.price ? Math.round(course.price * 1.5) : 0);
 
+  // Enrollment and Cart Checks
+  const enrolled = isEnrolled(courseId);
+  const inCart = isInCart(courseId);
+  const isFree = !course.price || course.price === 0;
+
+  // Render Action Button based on Priority Rules
+  const renderActionButton = () => {
+    // Show disabled loading button while enrollments are fetching to avoid text flashes
+    if (user && isEnrollmentsLoading) {
+      return (
+        <Button variant="secondary" size="lg" fullWidth disabled>
+          Checking status...
+        </Button>
+      );
+    }
+
+    // Rule e: Not logged in -> "Enroll now" -> Redirect to /login with return URL
+    if (!user) {
+      return (
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          rightIcon={ArrowRight}
+          onClick={() => navigate(`/login?redirect=/courses/${courseId}`)}
+        >
+          Enroll now
+        </Button>
+      );
+    }
+
+    // Rule a: Already enrolled -> "Continue learning" -> Navigate to My Learning
+    if (enrolled) {
+      return (
+        <Button
+          variant="success"
+          size="lg"
+          fullWidth
+          leftIcon={Play}
+          onClick={() => navigate('/student/my-learning')}
+        >
+          Continue learning
+        </Button>
+      );
+    }
+
+    // Rule b: Free, not enrolled -> "Enroll now — Free" -> Enroll directly, toast, navigate to My Learning
+    if (isFree) {
+      return (
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          isLoading={isActionProcessing}
+          rightIcon={ArrowRight}
+          onClick={handleEnrollFree}
+        >
+          Enroll now — Free
+        </Button>
+      );
+    }
+
+    // Rule c: Paid, already in cart -> "Go to cart" -> Navigate to /student/cart
+    if (inCart) {
+      return (
+        <Button
+          variant="secondary"
+          size="lg"
+          fullWidth
+          leftIcon={ShoppingCart}
+          onClick={() => navigate('/student/cart')}
+        >
+          Go to cart
+        </Button>
+      );
+    }
+
+    // Rule d: Paid, not in cart (default) -> "Enroll now — ₹{price}" -> Add to cart & immediately navigate to /student/cart
+    return (
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        rightIcon={ArrowRight}
+        onClick={handleBuyNow}
+      >
+        Enroll now — ₹{course.price}
+      </Button>
+    );
+  };
+
   return (
     <div className="font-sans space-y-10 pb-20 bg-[#F8F9FC]">
       
       {/* ── 1. Hero Banner Section ── */}
       <div className="bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800 relative overflow-hidden">
-        {/* Glow accent */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative z-10">
@@ -192,7 +312,7 @@ export const CourseDetails = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
           
-          {/* Left Column: Course Specs, Learning Goals, Curriculum */}
+          {/* Left Column: Learning Points & Syllabus */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* What You'll Learn Grid Card */}
@@ -343,27 +463,21 @@ export const CourseDetails = () => {
                 {/* Price Display */}
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
-                    {originalPrice > 0 && (
+                    <span className="text-3xl font-extrabold font-mono text-gray-900">
+                      {isFree ? 'Free' : `₹${course.price}`}
+                    </span>
+                    {!isFree && originalPrice > 0 && (
                       <span className="text-sm text-gray-400 line-through font-mono">₹{originalPrice}</span>
                     )}
-                    <Badge variant="amber" size="sm">LIMITED OFFER</Badge>
+                    <Badge variant={isFree ? 'success' : 'amber'} size="sm">
+                      {isFree ? '100% FREE' : 'LIMITED OFFER'}
+                    </Badge>
                   </div>
-                  <p className="text-[11px] text-red-500 font-semibold flex items-center gap-1">
-                    <span>🔥 Special launch price discount active</span>
-                  </p>
                 </div>
 
-                {/* Buttons */}
+                {/* Main Action Button */}
                 <div className="space-y-2.5">
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    onClick={() => navigate('/student/cart')}
-                  >
-                    Enroll Now
-                  </Button>
+                  {renderActionButton()}
                   
                   <Button
                     variant="outline"

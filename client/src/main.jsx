@@ -6,27 +6,30 @@ import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
+import { CartProvider } from './context/CartContext';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <AppProvider>
-          <App />
-          <ToastContainer
-            position="bottom-right"
-            autoClose={4000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="light"
-          />
-        </AppProvider>
+        <CartProvider>
+          <AppProvider>
+            <App />
+            <ToastContainer
+              position="bottom-right"
+              autoClose={4000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="light"
+            />
+          </AppProvider>
+        </CartProvider>
       </AuthProvider>
     </ErrorBoundary>
   </React.StrictMode>

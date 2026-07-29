@@ -1,52 +1,86 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, CreditCard, Lock, CheckCircle2, ArrowRight, Download, BookOpen } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { ShieldCheck, CreditCard, Lock, CheckCircle2, ArrowRight } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
+import { useCart } from '../../context/CartContext';
+import enrollmentService from '../../services/enrollmentService';
 import { toast } from 'react-toastify';
 
 export const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { cartItems: contextCartItems, clearCart, refetchEnrollments } = useCart();
+
+  // Combine cart items passed via location state or fallback to context
+  const cartItems = location.state?.cartItems || contextCartItems || [];
+  const totalPrice = location.state?.totalPrice !== undefined
+    ? location.state.totalPrice
+    : cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
+
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  const [enrolledTitles, setEnrolledTitles] = useState([]);
 
   // Billing form state
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
 
-  const totalAmount = cartItems.reduce((sum, item) => sum + (item.course?.price || item.price || 0), 0);
-
   const handleConfirmPurchase = async (e) => {
     e.preventDefault();
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty.');
+      return;
+    }
+
     setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsProcessing(false);
-    setIsSuccessModalOpen(true);
-    toast.success('🎉 Purchase successful! Course added to My Learning.');
+    try {
+      // Enroll student in all purchased courses in parallel
+      const titles = [];
+      await Promise.all(
+        cartItems.map(async (course) => {
+          const cId = (course._id || course.id)?.toString();
+          if (cId) {
+            await enrollmentService.enroll(cId);
+            titles.push(course.title);
+          }
+        })
+      );
+
+      setEnrolledTitles(titles);
+      await refetchEnrollments();
+      clearCart();
+      setIsSuccessModalOpen(true);
+      toast.success('🎉 Purchase successful! Courses added to My Learning.');
+    } catch (err) {
+      console.error('[Checkout Error]:', err);
+      toast.error(err.message || 'Payment processing failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
     <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8 font-sans">
       
-      {/* Checkout Header & Steps */}
+      {/* Header */}
       <div className="space-y-4">
         <Badge variant="primary" size="sm">SECURE CHECKOUT</Badge>
         <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-gray-900 tracking-tight">
-          Complete Your Order
+          Complete Your Order ({cartItems.length} {cartItems.length === 1 ? 'Course' : 'Courses'})
         </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Left 2 Cols: Payment & Billing Details */}
+        {/* Left 2 Cols: Payment & Billing Form */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6 space-y-6 shadow-soft">
+          <Card className="p-6 space-y-6 shadow-soft bg-white">
             <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
               1. Payment Method
             </h2>
@@ -85,7 +119,7 @@ export const Checkout = () => {
                 label="Cardholder Full Name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Name on card"
+                placeholder="e.g. Alex Morgan"
                 isRequired
               />
 
@@ -120,7 +154,7 @@ export const Checkout = () => {
                   isLoading={isProcessing}
                   leftIcon={Lock}
                 >
-                  Pay ₹{totalAmount} & Complete Order
+                  Pay ₹{totalPrice} & Complete Order
                 </Button>
               </div>
             </form>
@@ -129,22 +163,25 @@ export const Checkout = () => {
 
         {/* Right Col: Order Items Summary */}
         <div className="lg:col-span-1">
-          <Card className="p-6 space-y-4 shadow-soft">
+          <Card className="p-6 space-y-4 shadow-soft bg-white border border-gray-200">
             <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
-              Order Summary ({cartItems.length})
+              Order Items ({cartItems.length})
             </h2>
 
             {cartItems.length > 0 ? (
-              <div className="space-y-3">
-                {cartItems.map((item) => (
-                  <div key={item.id || item._id} className="flex items-center gap-3 text-xs">
-                    <img src={item.course?.thumbnail || item.thumbnail} alt="thumbnail" className="w-12 h-9 rounded object-cover" />
-                    <div className="flex-1 truncate">
-                      <p className="font-bold text-gray-900 truncate">{item.course?.title || item.title}</p>
-                      <span className="font-mono text-[#4F46E5]">₹{item.course?.price || item.price || 0}</span>
+              <div className="space-y-3 divide-y divide-gray-100">
+                {cartItems.map((course) => {
+                  const courseId = (course._id || course.id)?.toString();
+                  return (
+                    <div key={courseId} className="flex items-center gap-3 text-xs pt-2 first:pt-0">
+                      <img src={course.thumbnail} alt={course.title} className="w-14 h-10 rounded object-cover shrink-0" />
+                      <div className="flex-1 truncate">
+                        <p className="font-bold text-gray-900 truncate">{course.title}</p>
+                        <span className="font-mono text-[#4F46E5] font-semibold">₹{course.price || 0}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="text-xs text-gray-500 py-4 text-center">Your order cart is empty.</p>
@@ -152,7 +189,7 @@ export const Checkout = () => {
 
             <div className="pt-4 border-t border-gray-200 flex justify-between text-sm font-extrabold font-heading text-gray-900">
               <span>Total Due</span>
-              <span className="font-mono text-[#4F46E5]">₹{totalAmount}</span>
+              <span className="font-mono text-[#4F46E5]">₹{totalPrice}</span>
             </div>
           </Card>
         </div>
@@ -166,18 +203,26 @@ export const Checkout = () => {
           setIsSuccessModalOpen(false);
           navigate('/student/my-learning');
         }}
-        title="Payment Successful!"
+        title="Payment & Enrollment Successful!"
         size="md"
       >
         <div className="text-center space-y-4 py-2">
           <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-gray-900 font-heading">Thank You for Your Order</h3>
-            <p className="text-xs text-gray-500">Your enrollment has been activated. You can access your course lessons immediately.</p>
+          <div className="space-y-2">
+            <h3 className="text-base font-bold text-gray-900 font-heading">Enrolled in {enrolledTitles.length} {enrolledTitles.length === 1 ? 'Course' : 'Courses'}</h3>
+            <ul className="text-xs text-gray-600 font-medium space-y-1 bg-gray-50 p-3 rounded-lg border border-gray-100 text-left max-h-36 overflow-y-auto">
+              {enrolledTitles.map((title, idx) => (
+                <li key={idx} className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="truncate">{title}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-xs text-gray-500">Your enrollments are active. You can start learning immediately.</p>
           </div>
-          <Button variant="primary" size="md" fullWidth onClick={() => navigate('/student/my-learning')}>
+          <Button variant="primary" size="md" fullWidth rightIcon={ArrowRight} onClick={() => navigate('/student/my-learning')}>
             Go to My Learning
           </Button>
         </div>

@@ -1,20 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingBag, Trash2, Tag, ArrowRight, Star, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { ShoppingBag, Trash2, ArrowRight, Star } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
+import { useCart } from '../../context/CartContext';
 import { toast } from 'react-toastify';
 
 export const Cart = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState([]);
+  const { cartItems, removeFromCart } = useCart();
   const [couponCode, setCouponCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState(0); // percentage
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
 
   const handleRemoveItem = (id) => {
-    setItems((prev) => prev.filter((item) => item.id !== id && item._id !== id));
+    removeFromCart(id);
     toast.info('Course removed from cart.');
   };
 
@@ -28,9 +29,19 @@ export const Cart = () => {
     }
   };
 
-  const subtotal = items.reduce((sum, item) => sum + (item.course?.price || item.price || 0), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
   const discountAmount = (subtotal * appliedDiscount) / 100;
   const totalPrice = subtotal - discountAmount;
+
+  const handleProceedToCheckout = () => {
+    navigate('/student/checkout', {
+      state: {
+        cartItems,
+        totalPrice,
+        discountAmount,
+      },
+    });
+  };
 
   return (
     <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8 font-sans">
@@ -39,35 +50,37 @@ export const Cart = () => {
       <div className="space-y-1">
         <Badge variant="primary" size="sm">SHOPPING CART</Badge>
         <h1 className="text-2xl sm:text-3xl font-extrabold font-heading text-gray-900 tracking-tight">
-          Your Cart ({items.length} {items.length === 1 ? 'Course' : 'Courses'})
+          Your Cart ({cartItems.length} {cartItems.length === 1 ? 'Course' : 'Courses'})
         </h1>
       </div>
 
-      {items.length > 0 ? (
+      {cartItems.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Left: Cart Items List */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item) => {
-              const course = item.course || item;
-              const courseId = course._id || course.id;
+            {cartItems.map((course) => {
+              const courseId = (course._id || course.id)?.toString();
+              const categoryName = typeof course.category === 'object' ? (course.category?.name || 'General') : (course.category || 'General');
+              const instructorName = typeof course.instructor === 'object' ? (course.instructor?.name || 'Faculty Member') : (course.instructor || 'Faculty Member');
+
               return (
                 <Card key={courseId} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-soft">
                   <div className="flex items-center gap-4">
-                    <img src={course.thumbnail} alt={course.title} className="w-20 h-14 rounded-[8px] object-cover shrink-0" />
+                    <img src={course.thumbnail} alt={course.title} className="w-24 h-16 rounded-[8px] object-cover shrink-0" />
                     <div className="space-y-1">
-                      <Badge variant="primary" size="sm">{typeof course.category === 'object' ? course.category?.name : course.category}</Badge>
+                      <Badge variant="primary" size="sm">{categoryName}</Badge>
                       <h3 className="text-sm font-bold font-heading text-gray-900">{course.title}</h3>
-                      <p className="text-xs text-gray-500">By {typeof course.instructor === 'object' ? course.instructor?.name : (course.instructor || 'Faculty')}</p>
+                      <p className="text-xs text-gray-500">By {instructorName}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-                    <span className="text-base font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
+                    <span className="text-lg font-extrabold font-mono text-gray-900">₹{course.price || 0}</span>
                     <button
                       onClick={() => handleRemoveItem(courseId)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
-                      title="Remove"
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Remove from Cart"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -79,14 +92,14 @@ export const Cart = () => {
 
           {/* Right: Order Summary Card */}
           <div className="lg:col-span-1">
-            <Card className="p-6 space-y-6 shadow-soft-md border-2 border-indigo-50">
+            <Card className="p-6 space-y-6 shadow-soft-md border-2 border-indigo-50 bg-white">
               <h2 className="text-base font-bold font-heading text-gray-900 border-b border-gray-100 pb-2">
                 Order Summary
               </h2>
 
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({items.length} items)</span>
+                  <span>Subtotal ({cartItems.length} items)</span>
                   <span className="font-mono font-bold text-gray-900">₹{subtotal}</span>
                 </div>
 
@@ -124,7 +137,7 @@ export const Cart = () => {
                 size="lg"
                 fullWidth
                 rightIcon={ArrowRight}
-                onClick={() => navigate('/student/checkout')}
+                onClick={handleProceedToCheckout}
               >
                 Proceed to Checkout
               </Button>
@@ -133,7 +146,7 @@ export const Cart = () => {
 
         </div>
       ) : (
-        <Card className="p-14 text-center space-y-4">
+        <Card className="p-14 text-center space-y-4 bg-white">
           <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto">
             <ShoppingBag className="w-7 h-7 text-[#4F46E5]" />
           </div>

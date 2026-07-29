@@ -44,11 +44,13 @@ export const Login = () => {
       toast.success(`Welcome back, ${loggedInUser.name}!`);
       
       const userRole = loggedInUser.role || 'student';
-      const fromPath = location.state?.from?.pathname || '';
+      const searchParams = new URLSearchParams(location.search);
+      const redirectParam = searchParams.get('redirect');
+      const fromPath = location.state?.from?.pathname || redirectParam || '';
       
-      // If previous route location does not match user's role prefix, default to their role's home dashboard
-      const isRolePathMismatch = fromPath && !fromPath.startsWith(`/${userRole}`);
-      const destination = (fromPath && !isRolePathMismatch) ? fromPath : `/${userRole}/dashboard`;
+      const isPublicPath = fromPath.startsWith('/courses');
+      const isRolePathMismatch = fromPath && !isPublicPath && !fromPath.startsWith(`/${userRole}`);
+      const destination = (fromPath && (isPublicPath || !isRolePathMismatch)) ? fromPath : `/${userRole}/dashboard`;
 
       navigate(destination, { replace: true });
     } catch (err) {

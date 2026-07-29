@@ -1,30 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { Bookmark, ShoppingBag, Star, Trash2 } from 'lucide-react';
+import { Bookmark, ShoppingBag, Star, Trash2, CheckCircle2, ArrowRight, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { CardSkeleton } from '../../components/common/Skeleton';
+import { useCart } from '../../context/CartContext';
+import enrollmentService from '../../services/enrollmentService';
 import { toast } from 'react-toastify';
 
 export const Wishlist = () => {
   const navigate = useNavigate();
+  const { addToCart, isInCart, isEnrolled, refetchEnrollments } = useCart();
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 300);
-    return () => clearTimeout(t);
+    // Read wishlist from localStorage or local state
+    const savedWishlist = JSON.parse(localStorage.getItem('learnix_wishlist') || '[]');
+    setWishlistItems(savedWishlist);
+    setIsLoading(false);
   }, []);
 
   const handleRemove = (id) => {
-    setWishlistItems((prev) => prev.filter((item) => (item.id !== id && item._id !== id)));
+    const updated = wishlistItems.filter((item) => (item.id || item._id) !== id);
+    setWishlistItems(updated);
+    localStorage.setItem('learnix_wishlist', JSON.stringify(updated));
     toast.info('Item removed from wishlist.');
   };
 
-  const handleMoveToCart = (course) => {
-    toast.success(`🛒 "${course.title}" moved to cart!`);
-    navigate('/student/cart');
+  const handleFreeEnroll = async (courseId) => {
+    setActionLoadingId(courseId);
+    try {
+      await enrollmentService.enroll(courseId);
+      await refetchEnrollments();
+      toast.success('🎉 Successfully enrolled in free course!');
+      navigate(`/student/my-learning`);
+    } catch (err) {
+      console.error('[Wishlist Free Enroll Error]:', err);
+      toast.error(err.message || 'Failed to enroll in course.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleAddToCart = (course) => {
+    addToCart(course);
+    toast.success(`🛒 "${course.title}" added to cart!`);
   };
 
   if (isLoading) {
@@ -60,7 +83,11 @@ export const Wishlist = () => {
       {wishlistItems.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlistItems.map((course) => {
-            const courseId = course._id || course.id;
+            const courseId = (course._id || course.id)?.toString();
+            const enrolled = isEnrolled(courseId);
+            const inCart = isInCart(courseId);
+            const isFree = !course.price || course.price === 0;
+
             return (
               <Card hoverable key={courseId} className="p-0 overflow-hidden flex flex-col justify-between space-y-0">
                 <div>
@@ -77,7 +104,7 @@ export const Wishlist = () => {
 
                   <div className="p-5 space-y-3">
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{course.category?.name || course.category || 'General'}</span>
+                      <span>{typeof course.category === 'object' ? course.category?.name : (course.category || 'General')}</span>
                       <span className="flex items-center gap-1 text-amber-500 font-bold font-mono">
                         <Star className="w-3.5 h-3.5 fill-amber-400" />
                         {course.rating || 5.0}
@@ -89,18 +116,56 @@ export const Wishlist = () => {
                     </h3>
 
                     <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
-                      <span>{course.instructor?.name || 'Learnix Faculty'}</span>
+                      <span>{typeof course.instructor === 'object' ? course.instructor?.name : (course.instructor || 'Faculty')}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
+                {/* Footer Actions */}
+                <div className="p-4 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between gap-2">
                   <div className="flex items-baseline gap-1 font-mono">
-                    <span className="text-lg font-bold text-gray-900">₹{course.price || 0}</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {isFree ? 'Free' : `₹${course.price}`}
+                    </span>
                   </div>
-                  <Button variant="primary" size="sm" leftIcon={ShoppingBag} onClick={() => handleMoveToCart(course)}>
-                    Move to Cart
-                  </Button>
+
+                  {enrolled ? (
+                    <Button
+                      variant="success"
+                      size="sm"
+                      leftIcon={Play}
+                      onClick={() => navigate(`/student/my-learning`)}
+                    >
+                      Continue Learning
+                    </Button>
+                  ) : isFree ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      isLoading={actionLoadingId === courseId}
+                      onClick={() => handleFreeEnroll(courseId)}
+                    >
+                      Enroll now — Free
+                    </Button>
+                  ) : inCart ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      leftIcon={CheckCircle2}
+                      onClick={() => navigate('/student/cart')}
+                    >
+                      In cart ✓
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      leftIcon={ShoppingBag}
+                      onClick={() => handleAddToCart(course)}
+                    >
+                      Add to Cart
+                    </Button>
+                  )}
                 </div>
               </Card>
             );

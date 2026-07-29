@@ -30,6 +30,27 @@ export const enrollmentService = {
     });
     return response.data.data;
   },
+
+  // Directly enroll in a course (for free courses or checkout)
+  enroll: async (courseId) => {
+    const response = await api.post(`/enrollments/enroll/${courseId}`);
+    return response.data.data;
+  },
+
+  // Alias for getMyEnrolledCourses
+  getMyCourses: async () => {
+    const response = await api.get('/enrollments/my-courses');
+    return (response.data.data || []).map((item) => ({
+      ...item,
+      id: item._id || item.id,
+      course: item.course
+        ? {
+            ...item.course,
+            id: item.course._id || item.course.id,
+          }
+        : null,
+    }));
+  },
 };
 
 export default enrollmentService;

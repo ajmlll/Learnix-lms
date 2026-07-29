@@ -183,3 +183,20 @@ export const updateProgress = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Directly enroll in a course (for free courses or checkout)
+// @route   POST /api/enrollments/enroll/:courseId
+// @access  Private (Student)
+export const enrollInCourse = async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+    const enrollment = await createEnrollmentInternal(req.user._id, courseId);
+    res.status(200).json({
+      success: true,
+      message: 'Successfully enrolled in course!',
+      data: enrollment,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
