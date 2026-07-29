@@ -124,10 +124,9 @@ export const Home = () => {
           <Button
             variant="outline"
             size="lg"
-            leftIcon={Play}
-            onClick={() => setIsDemoModalOpen(true)}
+            onClick={() => navigate('/register')}
           >
-            Component Showcase Demo
+            Get Started Free
           </Button>
         </motion.div>
 
@@ -306,41 +305,25 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* 5. Role Switcher Callout Banner */}
+      {/* 5. Production Callout Banner */}
       <section className="bg-gradient-to-r from-[#4F46E5] to-indigo-700 text-white rounded-[16px] p-8 sm:p-12 shadow-soft-lg flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center md:text-left max-w-xl">
           <h2 className="text-2xl sm:text-3xl font-extrabold font-heading text-white tracking-tight">
             Ready to Start Learning or Teaching?
           </h2>
           <p className="text-xs sm:text-sm text-indigo-100 leading-relaxed">
-            Switch between Student, Instructor, and Admin workspaces anytime to test the platform.
+            Join thousands of developers leveling up their engineering skills on Learnix LMS today.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Button variant="amber" size="lg" onClick={() => handleQuickDemo('student')}>
-            Launch Student Portal
+          <Button variant="amber" size="lg" onClick={() => navigate('/courses')}>
+            Browse Catalog
           </Button>
-          <Button variant="outline" size="lg" className="bg-white text-indigo-700 border-white hover:bg-indigo-50" onClick={() => handleQuickDemo('instructor')}>
-            Launch Instructor Studio
+          <Button variant="outline" size="lg" className="bg-white text-indigo-700 border-white hover:bg-indigo-50" onClick={() => navigate('/register')}>
+            Sign Up Now
           </Button>
         </div>
       </section>
-
-      {/* Modal for component showcase */}
-      <Modal
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-        title="Learnix LMS Design Tokens"
-        subtitle="Reusable components showcase"
-        size="md"
-      >
-        <div className="space-y-4 text-xs text-gray-600">
-          <p>This modal is rendered dynamically using Framer Motion animations.</p>
-          <div className="p-3 bg-gray-50 rounded-lg font-mono">
-            Primary Color: #4F46E5 | Accent: #F59E0B
-          </div>
-        </div>
-      </Modal>
 
     </div>
   );
