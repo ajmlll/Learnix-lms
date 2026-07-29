@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Mail, Lock, GraduationCap, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, GraduationCap, ArrowRight, Eye, EyeOff, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
+import Badge from '../../components/common/Badge';
 import { toast } from 'react-toastify';
 
 export const Login = () => {
@@ -50,6 +51,12 @@ export const Login = () => {
     }
   };
 
+  const handleFillCredentials = (roleEmail) => {
+    setEmail(roleEmail);
+    setPassword('password123');
+    setErrors({});
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FC] font-sans">
       <div className="w-full max-w-md space-y-6">
@@ -65,7 +72,7 @@ export const Login = () => {
             </span>
           </Link>
           <h2 className="text-xl font-bold font-heading text-gray-900">Welcome Back</h2>
-          <p className="text-xs text-gray-500">Sign in to your Learnix AI account</p>
+          <p className="text-xs text-gray-500">Sign in to your Learnix account</p>
         </div>
 
         {/* Login Form Card */}
@@ -116,6 +123,37 @@ export const Login = () => {
               Sign In to Learnix
             </Button>
           </form>
+
+          {/* Quick Demo Test Accounts Helper */}
+          <div className="p-3 bg-[#F8F9FC] rounded-[10px] border border-gray-200 space-y-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-700 font-heading">
+              <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
+              <span>Quick Test Sign-In Accounts:</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleFillCredentials('student@learnix.edu')}
+                className="py-1 px-2 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded border border-indigo-200 transition-colors cursor-pointer"
+              >
+                Student
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFillCredentials('instructor@learnix.edu')}
+                className="py-1 px-2 text-[11px] font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 rounded border border-amber-200 transition-colors cursor-pointer"
+              >
+                Instructor
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFillCredentials('admin@learnix.edu')}
+                className="py-1 px-2 text-[11px] font-semibold text-slate-800 bg-slate-200 hover:bg-slate-300 rounded border border-slate-300 transition-colors cursor-pointer"
+              >
+                Admin
+              </button>
+            </div>
+          </div>
 
           {/* Don't have an account */}
           <div className="text-center pt-2 border-t border-gray-100">
