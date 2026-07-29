@@ -17,7 +17,7 @@ export const CourseListing = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedLevel, setSelectedLevel] = useState('all');
-  const [maxPrice, setMaxPrice] = useState(150);
+  const [maxPrice, setMaxPrice] = useState(10000);
   const [sortBy, setSortBy] = useState('popular');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -61,7 +61,7 @@ export const CourseListing = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedLevel('all');
-    setMaxPrice(150);
+    setMaxPrice(10000);
     setSortBy('popular');
     setSearchParams({});
   };
@@ -162,20 +162,20 @@ export const CourseListing = () => {
           <div className="space-y-2 pt-2 border-t border-gray-100">
             <div className="flex items-center justify-between text-xs font-bold text-gray-700 font-heading">
               <span>Max Price</span>
-              <span className="font-mono text-[#4F46E5]">${maxPrice}</span>
+              <span className="font-mono text-[#4F46E5]">₹{maxPrice.toLocaleString()}</span>
             </div>
             <input
               type="range"
-              min="20"
-              max="150"
-              step="10"
+              min="0"
+              max="50000"
+              step="500"
               value={maxPrice}
               onChange={(e) => setMaxPrice(Number(e.target.value))}
               className="w-full accent-[#4F46E5] cursor-pointer"
             />
             <div className="flex justify-between text-[10px] text-gray-400 font-mono">
-              <span>$20</span>
-              <span>$150</span>
+              <span>₹0</span>
+              <span>₹50,000</span>
             </div>
           </div>
         </aside>
