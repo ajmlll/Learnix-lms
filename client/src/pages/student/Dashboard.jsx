@@ -184,31 +184,37 @@ export const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {courses.map((sc) => (
-              <Card hoverable key={sc.courseId} className="p-4 space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <img
-                    src={sc.course.thumbnail}
-                    alt={sc.course.title}
-                    className="w-full sm:w-28 h-20 rounded-[8px] object-cover shrink-0"
-                  />
-                  <div className="flex-1 space-y-1.5 w-full">
-                    <div className="flex items-center justify-between">
-                      <Badge variant={sc.status === 'completed' ? 'success' : 'primary'} size="sm">
-                        {sc.status === 'completed' ? 'COMPLETED' : sc.course.category}
-                      </Badge>
-                      <span className="text-xs font-mono font-bold text-[#4F46E5]">{sc.progress}%</span>
+            {courses.map((sc) => {
+              const cId = sc.courseId || sc.course?._id || sc.course?.id;
+              const catName = typeof sc.course?.category === 'object' ? (sc.course?.category?.name || 'General') : (sc.course?.category || 'General');
+              const courseTitle = sc.course?.title || 'Untitled Course';
+              const progressVal = sc.progressPercent || sc.progress || 0;
+
+              return (
+                <Card hoverable key={cId} className="p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <img
+                      src={sc.course?.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600'}
+                      alt={courseTitle}
+                      className="w-full sm:w-28 h-20 rounded-[8px] object-cover shrink-0"
+                    />
+                    <div className="flex-1 space-y-1.5 w-full">
+                      <div className="flex items-center justify-between">
+                        <Badge variant={sc.status === 'completed' ? 'success' : 'primary'} size="sm">
+                          {sc.status === 'completed' ? 'COMPLETED' : catName}
+                        </Badge>
+                        <span className="text-xs font-mono font-bold text-[#4F46E5]">{progressVal}%</span>
+                      </div>
+
+                      <h3 className="text-sm font-bold font-heading text-gray-900 leading-snug">
+                        {courseTitle}
+                      </h3>
+
+                      <p className="text-xs text-gray-500">
+                        Next: <strong className="text-gray-700">{sc.currentLessonTitle || 'Module 1: Introduction'}</strong>
+                      </p>
                     </div>
-
-                    <h3 className="text-sm font-bold font-heading text-gray-900 leading-snug">
-                      {sc.course.title}
-                    </h3>
-
-                    <p className="text-xs text-gray-500">
-                      Next: <strong className="text-gray-700">{sc.currentLessonTitle}</strong>
-                    </p>
                   </div>
-                </div>
 
                 {/* Progress bar & CTA */}
                 <div className="space-y-2 pt-1 border-t border-gray-100">
@@ -222,18 +228,19 @@ export const Dashboard = () => {
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[11px] text-gray-400">Last accessed: {sc.lastAccessed}</span>
+                    <span className="text-[11px] text-gray-400">Last accessed: {sc.lastAccessed || 'Recently'}</span>
                     <Button
                       variant={sc.status === 'completed' ? 'secondary' : 'primary'}
                       size="sm"
-                      onClick={() => navigate(`/student/course/${sc.courseId}/play`)}
+                      onClick={() => navigate(`/student/course/${cId}/play`)}
                     >
                       {sc.status === 'completed' ? 'Review Lessons' : 'Continue Lesson'}
                     </Button>
                   </div>
                 </div>
               </Card>
-            ))}
+              );
+            })}
           </div>
         </div>
 
