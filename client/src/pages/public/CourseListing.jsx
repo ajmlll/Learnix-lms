@@ -3,6 +3,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Filter, Star, X, BookOpen, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
 import courseService from '../../services/courseService';
+import Card from '../../components/common/Card';
+import Button from '../../components/common/Button';
+import Badge from '../../components/common/Badge';
 
 export const CourseListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
