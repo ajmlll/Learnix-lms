@@ -77,16 +77,6 @@ export const Home = () => {
       
       {/* 1. Hero Section */}
       <section className="text-center space-y-6 pt-4 sm:pt-8">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-semibold text-[#4F46E5]"
-        >
-          <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-          <span>Learnix LMS v2.0 • Powered by React 19 & Tailwind v4</span>
-        </motion.div>
-
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
