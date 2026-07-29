@@ -1,6 +1,8 @@
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
+import { awardXP, updateStreak } from '../utils/gamificationService.js';
+import { generateCertificateInternal } from './certificateController.js';
 
 /**
  * Internal Helper: Create an enrollment record after payment success
@@ -128,12 +130,12 @@ export const updateProgress = async (req, res, next) => {
       });
     }
 
-    // Check if lecture item exists in progress array
     const progressItem = enrollment.progress.find(
       (item) => item.lectureId.toString() === lectureId.toString()
     );
 
     const isCompleted = completed !== undefined ? Boolean(completed) : true;
+    const isNewlyCompleted = isCompleted && (!progressItem || !progressItem.completed);
 
     if (progressItem) {
       progressItem.completed = isCompleted;
@@ -146,18 +148,28 @@ export const updateProgress = async (req, res, next) => {
       });
     }
 
-    // Recalculate total progress percentage
+    // Recalculate progress percentage
     const totalLectures = enrollment.progress.length;
     const completedCount = enrollment.progress.filter((item) => item.completed).length;
 
     enrollment.progressPercent = totalLectures > 0 ? Math.round((completedCount / totalLectures) * 100) : 0;
 
-    // Handle course completion & certificate trigger stub
+    // Trigger Gamification XP & Streak updates on completion
+    if (isNewlyCompleted) {
+      await awardXP(req.user._id, 'lecture_completed', 50);
+      await updateStreak(req.user._id);
+    }
+
+    // Handle course completion & PDF Certificate generation
     if (enrollment.progressPercent === 100 && !enrollment.completedAt) {
       enrollment.completedAt = new Date();
       enrollment.certificateIssued = true;
-      // TODO: Call generateCertificate(enrollment.student, enrollment.course) when Certificate module is built
-      console.log(`[Certificate Stub]: Certificate issued for student ${req.user._id} in course ${courseId}`);
+
+      try {
+        await generateCertificateInternal(enrollment._id);
+      } catch (certErr) {
+        console.error('[Certificate Generation Error]:', certErr.message);
+      }
     }
 
     await enrollment.save();

@@ -15,6 +15,13 @@ import courseRoutes from './routes/courseRoutes.js';
 import enrollmentRoutes from './routes/enrollmentRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import gamificationRoutes from './routes/gamificationRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
+import codeExecutionRoutes from './routes/codeExecutionRoutes.js';
+import liveClassRoutes from './routes/liveClassRoutes.js';
+import discussionRoutes from './routes/discussionRoutes.js';
+import certificateRoutes from './routes/certificateRoutes.js';
+
 import { handleWebhook } from './controllers/paymentController.js';
 
 const app = express();
@@ -28,7 +35,7 @@ app.use(
   })
 );
 
-// CRITICAL: Raw body parsing for Stripe Webhook before express.json()
+// Raw body parsing for Stripe Webhook before express.json()
 app.post(
   '/api/payments/webhook',
   express.raw({ type: 'application/json' }),
@@ -49,6 +56,12 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/code', codeExecutionRoutes);
+app.use('/api/live-classes', liveClassRoutes);
+app.use('/api/discussions', discussionRoutes);
+app.use('/api/certificates', certificateRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
