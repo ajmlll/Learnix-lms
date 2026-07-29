@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   BookOpen,
+  Compass,
   Zap,
   Flame,
   Target,
@@ -32,7 +33,8 @@ export const StudentLayout = () => {
 
   const navItems = [
     { label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
-    { label: 'My Learning', path: '/student/my-learning', icon: BookOpen, badge: '3 Active' },
+    { label: 'Browse All Courses', path: '/courses', icon: Compass, badge: 'Catalog' },
+    { label: 'My Learning', path: '/student/my-learning', icon: BookOpen, badge: 'Enrolled' },
     { label: 'XP & Level Hub', path: '/student/xp', icon: Zap, isGamified: true, badge: 'LVL 5' },
     { label: 'Streak Heatmap', path: '/student/streak', icon: Flame, isGamified: true, badge: '7 Days' },
     { label: 'Weekly Target', path: '/student/weekly-goal', icon: Target },
