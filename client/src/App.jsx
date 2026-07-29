@@ -135,7 +135,7 @@ export function App() {
         {/* Instructor Protected Routes */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={['instructor']}>
+            <ProtectedRoute allowedRoles={['instructor', 'admin']}>
               <InstructorLayout />
             </ProtectedRoute>
           }
