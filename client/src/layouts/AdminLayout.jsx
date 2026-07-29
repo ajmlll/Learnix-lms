@@ -9,7 +9,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
   LogOut,
   TrendingUp,
 } from 'lucide-react';
@@ -19,16 +18,16 @@ import Badge from '../components/common/Badge';
 import PageTransition from '../components/common/PageTransition';
 
 export const AdminLayout = () => {
-  const { user, logout, switchRole } = useAuth();
+  const { user, logout } = useAuth();
   const { isSidebarOpen, toggleSidebar } = useApp();
   const navigate = useNavigate();
 
   const navItems = [
     { label: 'Platform Overview', path: '/admin/dashboard', icon: TrendingUp },
-    { label: 'Manage Users', path: '/admin/users', icon: Users, badge: '18.4k' },
-    { label: 'Course Approvals', path: '/admin/approvals', icon: BookOpen, badge: '2 Pending' },
+    { label: 'Manage Users', path: '/admin/users', icon: Users },
+    { label: 'Course Approvals', path: '/admin/approvals', icon: BookOpen },
     { label: 'Category Manager', path: '/admin/categories', icon: FolderTree },
-    { label: 'Financial Ledger', path: '/admin/payments', icon: CreditCard, badge: '$184k' },
+    { label: 'Financial Ledger', path: '/admin/payments', icon: CreditCard },
     { label: 'System Settings', path: '/admin/settings', icon: Settings },
   ];
 
@@ -37,7 +36,7 @@ export const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FC] font-sans">
-      {/* ── Top Header (fixed) ── */}
+      {/* Top Header */}
       <header className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-[#E5E7EB] h-16 flex items-center justify-between px-4 sm:px-6 shadow-xs">
         <div className="flex items-center gap-3">
           <button
@@ -51,7 +50,7 @@ export const AdminLayout = () => {
               : <ChevronRight className="w-5 h-5" aria-hidden="true" />}
           </button>
 
-          <NavLink to="/" className="flex items-center gap-2" aria-label="Learnix home">
+          <NavLink to="/admin/dashboard" className="flex items-center gap-2" aria-label="Learnix Admin Home">
             <div className="w-8 h-8 rounded-[8px] bg-[#0F172A] flex items-center justify-center text-white font-bold">
               <ShieldAlert className="w-5 h-5 text-amber-400" aria-hidden="true" />
             </div>
@@ -59,24 +58,23 @@ export const AdminLayout = () => {
               Learn<span className="text-[#4F46E5]">ix</span>
             </span>
           </NavLink>
-
         </div>
 
         {/* Header Right */}
-        <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-bold text-gray-700 hidden sm:inline">{user?.name || 'Administrator'}</span>
           <Badge variant="dark" size="sm">
             Admin
           </Badge>
         </div>
       </header>
 
-      {/* ── Fixed Sidebar ── */}
+      {/* Fixed Sidebar */}
       <aside
         className={`hidden md:flex flex-col fixed top-16 left-0 bottom-0 bg-white border-r border-[#E5E7EB] transition-all duration-300 z-20 overflow-hidden ${sidebarW}`}
         role="navigation"
         aria-label="Admin navigation"
       >
-        {/* Nav Links — scrollable if they overflow */}
         <div className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -97,21 +95,15 @@ export const AdminLayout = () => {
                 {isSidebarOpen && (
                   <div className="flex-1 flex items-center justify-between truncate">
                     <span className="truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-800 shrink-0 ml-1">
-                        {item.badge}
-                      </span>
-                    )}
                   </div>
                 )}
               </NavLink>
             );
           })}
 
-          {/* ── Divider before logout ── */}
           <div className="my-2 border-t border-gray-100" />
 
-          {/* Logout — inline with other nav items */}
+          {/* Logout */}
           <button
             onClick={() => { logout(); navigate('/login'); }}
             aria-label={!isSidebarOpen ? 'Sign Out' : undefined}
@@ -123,7 +115,7 @@ export const AdminLayout = () => {
         </div>
       </aside>
 
-      {/* ── Main Content — offset by header height + sidebar width ── */}
+      {/* Main Content */}
       <main
         className={`transition-all duration-300 pt-16 pb-24 md:pb-8 ${sidebarMLClass}`}
         id="main-content"
@@ -137,7 +129,7 @@ export const AdminLayout = () => {
         </div>
       </main>
 
-      {/* ── Mobile Bottom Navigation ── */}
+      {/* Mobile Bottom Navigation */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-1 py-1.5 flex items-center justify-around shadow-lg"
         aria-label="Admin mobile navigation"
