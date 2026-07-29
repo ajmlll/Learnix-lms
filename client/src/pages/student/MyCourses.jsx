@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, BookOpen, Award, LayoutGrid, List, PlayCircle, CheckCircle2 } from 'lucide-react';
+import { Search, BookOpen, Award, LayoutGrid, List, PlayCircle } from 'lucide-react';
 import enrollmentService from '../../services/enrollmentService';
+import Card from '../../components/common/Card';
+import Button from '../../components/common/Button';
+import Badge from '../../components/common/Badge';
+import { CardSkeleton } from '../../components/common/Skeleton';
 
 export const MyCourses = () => {
   const navigate = useNavigate();
@@ -68,9 +72,7 @@ export const MyCourses = () => {
 
       {/* Filter Tabs & Search Controls */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-[12px] border border-gray-200 shadow-soft">
-      {/* Filter Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto">
           {[
             { id: 'all', label: 'All Courses', count: courses.length },
             { id: 'in-progress', label: 'In Progress', count: courses.filter((c) => c.status === 'in-progress').length },
@@ -124,19 +126,18 @@ export const MyCourses = () => {
             </button>
           </div>
         </div>
-
       </div>
 
       {/* Courses Display */}
       {filteredCourses.length > 0 ? (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
           {filteredCourses.map((sc) => (
-            <Card hoverable key={sc.courseId} className="p-0 overflow-hidden flex flex-col justify-between">
+            <Card hoverable key={sc.courseId || sc.course?._id || sc.course?.id} className="p-0 overflow-hidden flex flex-col justify-between">
               <div>
                 <div className="relative h-44 w-full overflow-hidden">
                   <img
-                    src={sc.course.thumbnail}
-                    alt={sc.course.title}
+                    src={sc.course?.thumbnail || ''}
+                    alt={sc.course?.title || 'Course'}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-2 left-2">
@@ -148,16 +149,16 @@ export const MyCourses = () => {
 
                 <div className="p-5 space-y-3">
                   <div className="flex items-center justify-between text-xs text-gray-500 font-mono">
-                    <span>{sc.course.category}</span>
-                    <span className="font-bold text-[#4F46E5]">{sc.progress}% Complete</span>
+                    <span>{sc.course?.category?.name || sc.course?.category || 'General'}</span>
+                    <span className="font-bold text-[#4F46E5]">{sc.progressPercent || sc.progress || 0}% Complete</span>
                   </div>
 
                   <h3 className="text-base font-bold font-heading text-gray-900 leading-snug line-clamp-2">
-                    {sc.course.title}
+                    {sc.course?.title}
                   </h3>
 
                   <p className="text-xs text-gray-500">
-                    Instructor: <strong className="text-gray-700">{sc.course.instructor.name}</strong>
+                    Instructor: <strong className="text-gray-700">{sc.course?.instructor?.name || 'Learnix Faculty'}</strong>
                   </p>
 
                   <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
@@ -165,14 +166,14 @@ export const MyCourses = () => {
                       className={`h-full rounded-full transition-all duration-300 ${
                         sc.status === 'completed' ? 'bg-emerald-500' : 'bg-[#4F46E5]'
                       }`}
-                      style={{ width: `${sc.progress}%` }}
+                      style={{ width: `${sc.progressPercent || sc.progress || 0}%` }}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="px-5 py-3 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
-                <span className="text-[11px] text-gray-400 font-mono">{sc.lastAccessed}</span>
+                <span className="text-[11px] text-gray-400 font-mono">{sc.lastAccessed || 'Recently'}</span>
                 {sc.status === 'completed' ? (
                   <Button
                     variant="amber"
@@ -187,7 +188,7 @@ export const MyCourses = () => {
                     variant="primary"
                     size="sm"
                     leftIcon={PlayCircle}
-                    onClick={() => navigate(`/student/course/${sc.courseId}/play`)}
+                    onClick={() => navigate(`/student/course/${sc.courseId || sc.course?._id || sc.course?.id}/play`)}
                   >
                     Resume Learning
                   </Button>
