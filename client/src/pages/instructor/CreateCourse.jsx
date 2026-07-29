@@ -260,24 +260,83 @@ export const CreateCourse = () => {
             />
           </div>
 
-          {/* Thumbnail Image URL & Preview */}
-          <div className="space-y-2">
-            <Input
-              label="Course Thumbnail Image URL"
-              value={thumbnail}
-              onChange={(e) => setThumbnail(e.target.value)}
-              leftIcon={Upload}
-              placeholder="https://images.unsplash.com/..."
-            />
+          {/* Thumbnail Image File / URL & Live Preview */}
+          <div className="space-y-3 p-4 bg-[#F8F9FC] rounded-[12px] border border-gray-200">
+            <label className="block text-xs font-bold text-gray-900 font-heading">
+              Course Thumbnail Image
+            </label>
+
+            {/* Option A: Paste Image URL */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-semibold text-gray-600">Image Web Link (URL from any website)</label>
+              <input
+                type="text"
+                value={thumbnail}
+                onChange={(e) => setThumbnail(e.target.value)}
+                placeholder="https://example.com/image.png or paste image link..."
+                className="w-full text-xs bg-white border border-gray-200 rounded-[8px] p-2.5 outline-none focus:border-[#4F46E5]"
+              />
+            </div>
+
+            {/* Option B: Local File Upload */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+              <label className="flex-1 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-dashed border-gray-300 rounded-[8px] text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:border-indigo-400 transition-colors cursor-pointer text-center">
+                <Upload className="w-4 h-4 text-[#4F46E5]" />
+                <span>Upload Image File from Device (PNG/JPG)</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error('Image file must be under 5MB');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setThumbnail(reader.result);
+                        toast.success('📷 Image uploaded successfully!');
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            {/* Preset Cover Quick Options */}
+            <div className="space-y-1 pt-1">
+              <span className="text-[11px] font-semibold text-gray-500 block">Or pick a Quick Cover Preset:</span>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: '💻 Web Dev', url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600' },
+                  { label: '🤖 AI & Data', url: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&q=80&w=600' },
+                  { label: '☁️ Cloud & DevOps', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600' },
+                  { label: '📱 Mobile App', url: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=600' },
+                  { label: '🛡️ Cyber Security', url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=600' },
+                ].map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setThumbnail(preset.url)}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-white border border-gray-200 hover:border-[#4F46E5] hover:text-[#4F46E5] rounded-full transition-colors cursor-pointer"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Preview Box */}
             {thumbnail && (
-              <div className="flex items-center gap-4 p-3 bg-[#F8F9FC] rounded-[10px] border border-gray-200">
+              <div className="flex items-center gap-4 p-3 bg-white rounded-[10px] border border-gray-200 shadow-xs mt-2">
                 <img
+                  key={thumbnail}
                   src={thumbnail}
                   alt="Thumbnail preview"
-                  className="w-24 h-16 rounded-[8px] object-cover border border-gray-200 shrink-0"
-                  onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600';
-                  }}
+                  className="w-28 h-18 rounded-[8px] object-cover border border-gray-200 shrink-0"
                 />
                 <div className="text-xs space-y-0.5">
                   <span className="font-bold text-gray-900 font-heading block">Thumbnail Live Preview</span>
