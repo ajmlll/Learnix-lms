@@ -164,18 +164,10 @@ export const ManageUsers = () => {
                         <td className="p-4 font-mono text-gray-500">{new Date(u.createdAt || Date.now()).toLocaleDateString()}</td>
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            {uRole === 'student' && (
-                              <button
-                                onClick={() => handlePromote(userId, u.name)}
-                                className="px-2 py-1 bg-amber-50 text-amber-800 hover:bg-amber-100 rounded text-[11px] font-semibold transition-colors cursor-pointer"
-                              >
-                                Promote to Faculty
-                              </button>
-                            )}
                             {uRole !== 'admin' && (
                               <button
                                 onClick={() => handleToggleStatus(userId, u.name, uStatus)}
-                                className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors cursor-pointer ${
+                                className={`px-2.5 py-1 rounded-[6px] text-[11px] font-semibold transition-colors cursor-pointer ${
                                   uStatus === 'active'
                                     ? 'bg-red-50 text-red-700 hover:bg-red-100'
                                     : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
