@@ -25,6 +25,7 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
+import { CardSkeleton } from '../../components/common/Skeleton';
 import courseService from '../../services/courseService';
 import { useAuth } from '../../context/AuthContext';
 
@@ -227,8 +228,15 @@ export const Home = () => {
         </div>
 
         {/* Courses Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCourses.map((course) => (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCourses.map((course) => (
             <Card hoverable key={course.id} className="p-0 overflow-hidden space-y-0 flex flex-col justify-between">
               <div>
                 {/* Image header */}
@@ -293,6 +301,7 @@ export const Home = () => {
             </Card>
           ))}
         </div>
+        )}
       </section>
 
       {/* 5. Production Callout Banner */}

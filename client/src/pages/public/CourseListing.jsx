@@ -6,6 +6,7 @@ import courseService from '../../services/courseService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
+import { CardSkeleton } from '../../components/common/Skeleton';
 
 export const CourseListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -251,7 +252,16 @@ export const CourseListing = () => {
           )}
 
           {/* Course Cards Grid (Responsive 3 cols -> 2 -> 1) */}
-          {filteredCourses.length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          ) : filteredCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCourses.map((course) => (
                 <Card hoverable key={course.id} className="p-0 overflow-hidden space-y-0 flex flex-col justify-between">

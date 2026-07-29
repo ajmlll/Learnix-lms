@@ -101,7 +101,9 @@ export const MyCourses = () => {
       {/* Responsive Table / Stacked Cards View */}
       <Card className="p-0 overflow-hidden shadow-soft">
         {isLoading ? (
-          <TableRowSkeleton rows={4} />
+          <div className="p-6">
+            <TableRowSkeleton rows={4} />
+          </div>
         ) : filteredCourses.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <BookOpen className="w-8 h-8 text-gray-400 mx-auto" />
