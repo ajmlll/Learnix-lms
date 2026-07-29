@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Mail, Lock, GraduationCap, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, GraduationCap, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Input from '../../components/common/Input';
-import Badge from '../../components/common/Badge';
+import { toast } from 'react-toastify';
 
 export const Login = () => {
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [email, setEmail] = useState('alex@learnix.edu');
-  const [password, setPassword] = useState('password123');
-  const [selectedRole, setSelectedRole] = useState('student');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -40,24 +39,15 @@ export const Login = () => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    await login(email, password, selectedRole);
-    navigate(`/${selectedRole}/dashboard`, { replace: true });
-  };
-
-  const handleQuickRoleLogin = async (role) => {
-    setSelectedRole(role);
-    const mockEmail =
-      role === 'instructor'
-        ? 'elena.rostova@learnix.edu'
-        : role === 'admin'
-        ? 'admin@learnix.edu'
-        : 'alex@learnix.edu';
-
-    setEmail(mockEmail);
-    setPassword('password123');
-    setErrors({});
-    await login(mockEmail, 'password123', role);
-    navigate(`/${role}/dashboard`, { replace: true });
+    try {
+      const loggedInUser = await login(email, password);
+      toast.success(`Welcome back, ${loggedInUser.name}!`);
+      const targetRole = loggedInUser.role || 'student';
+      const from = location.state?.from?.pathname || `/${targetRole}/dashboard`;
+      navigate(from, { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Invalid credentials. Please try again.');
+    }
   };
 
   return (
@@ -75,70 +65,12 @@ export const Login = () => {
             </span>
           </Link>
           <h2 className="text-xl font-bold font-heading text-gray-900">Welcome Back</h2>
-          <p className="text-xs text-gray-500">Sign in to your account or launch a quick role demo</p>
+          <p className="text-xs text-gray-500">Sign in to your Learnix AI account</p>
         </div>
 
         {/* Login Form Card */}
         <Card className="space-y-6 shadow-soft-md">
-          
-          {/* Quick Demo Login Pill Bar */}
-          <div className="p-3 bg-indigo-50/60 border border-indigo-100 rounded-[10px] space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#4F46E5] flex items-center gap-1 font-heading">
-                <Sparkles className="w-3.5 h-3.5 text-[#F59E0B]" />
-                1-Click Quick Demo Sign In
-              </span>
-              <Badge variant="primary" size="sm">DEMO READY</Badge>
-            </div>
-            <div className="grid grid-cols-3 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => handleQuickRoleLogin('student')}
-                className="py-1.5 px-2 bg-white text-gray-800 hover:text-[#4F46E5] hover:border-indigo-300 border border-gray-200 rounded-[8px] text-[11px] font-semibold text-center transition-colors cursor-pointer"
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickRoleLogin('instructor')}
-                className="py-1.5 px-2 bg-white text-gray-800 hover:text-[#D97706] hover:border-amber-300 border border-gray-200 rounded-[8px] text-[11px] font-semibold text-center transition-colors cursor-pointer"
-              >
-                Instructor
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickRoleLogin('admin')}
-                className="py-1.5 px-2 bg-white text-gray-800 hover:text-red-600 hover:border-red-300 border border-gray-200 rounded-[8px] text-[11px] font-semibold text-center transition-colors cursor-pointer"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Role Selection */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5 font-heading">
-                Target Role
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {['student', 'instructor', 'admin'].map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setSelectedRole(r)}
-                    className={`py-1.5 text-xs font-semibold capitalize rounded-[8px] border transition-colors cursor-pointer ${
-                      selectedRole === r
-                        ? 'bg-[#4F46E5] text-white border-[#4F46E5]'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <Input
               label="Email Address"
               type="email"
@@ -147,7 +79,7 @@ export const Login = () => {
               error={errors.email}
               leftIcon={Mail}
               isRequired
-              placeholder="alex@learnix.edu"
+              placeholder="you@example.com"
             />
 
             <Input
@@ -194,9 +126,7 @@ export const Login = () => {
               </Link>
             </p>
           </div>
-
         </Card>
-
       </div>
     </div>
   );

@@ -5,44 +5,70 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
 import { TableRowSkeleton } from '../../components/common/Skeleton';
-import { ADMIN_COURSES } from '../../data/mockData';
+import adminService from '../../services/adminService';
+import courseService from '../../services/courseService';
 import { toast } from 'react-toastify';
 
 export const ManageCourses = () => {
-  const [courses, setCourses] = useState(ADMIN_COURSES);
+  const [courses, setCourses] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [reviewCourse, setReviewCourse] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [rejectionNotes, setRejectionNotes] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 550);
-    return () => clearTimeout(t);
-  }, []);
+  const fetchCourses = async () => {
+    setIsLoading(true);
+    try {
+      if (activeTab === 'pending' || activeTab === 'pending_review') {
+        const res = await adminService.getPendingCourses();
+        setCourses(res.data || []);
+      } else {
+        const res = await courseService.getCourses();
+        setCourses(res.courses || []);
+      }
+    } catch (err) {
+      console.error('[ManageCourses API Error]:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const filteredCourses =
-    activeTab === 'all'
-      ? courses
-      : courses.filter((c) => c.status === activeTab);
+  useEffect(() => {
+    fetchCourses();
+  }, [activeTab]);
+
+  const filteredCourses = courses;
 
   const handleOpenReview = (course) => {
     setReviewCourse(course);
     setIsReviewModalOpen(true);
   };
 
-  const handleApproveCourse = () => {
+  const handleApproveCourse = async () => {
     if (!reviewCourse) return;
-    setCourses((prev) =>
-      prev.map((c) => (c.id === reviewCourse.id ? { ...c, status: 'published' } : c))
-    );
-    setIsReviewModalOpen(false);
-    toast.success(`🎉 Course "${reviewCourse.title}" approved and published to marketplace!`);
+    try {
+      await adminService.approveCourse(reviewCourse._id || reviewCourse.id);
+      setIsReviewModalOpen(false);
+      toast.success(`Course "${reviewCourse.title}" approved and published!`);
+      fetchCourses();
+    } catch (err) {
+      toast.error(err.message || 'Failed to approve course');
+    }
   };
 
-  const handleRejectCourse = () => {
+  const handleRejectCourse = async () => {
     if (!reviewCourse) return;
-    setCourses((prev) =>
+    try {
+      await adminService.rejectCourse(reviewCourse._id || reviewCourse.id, rejectionNotes);
+      setIsReviewModalOpen(false);
+      setRejectionNotes('');
+      toast.warn(`Course "${reviewCourse.title}" rejected.`);
+      fetchCourses();
+    } catch (err) {
+      toast.error(err.message || 'Failed to reject course');
+    }
+  };
       prev.map((c) => (c.id === reviewCourse.id ? { ...c, status: 'draft' } : c))
     );
     setIsReviewModalOpen(false);

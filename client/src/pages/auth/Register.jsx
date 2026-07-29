@@ -9,7 +9,7 @@ import Badge from '../../components/common/Badge';
 import { toast } from 'react-toastify';
 
 export const Register = () => {
-  const { login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [role, setRole] = useState('student');
@@ -55,8 +55,16 @@ export const Register = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    try {
+      const user = await register(fullName, email, password, role);
+      toast.success('Account created successfully!');
+      navigate(`/${user.role || role}/dashboard`, { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
     await login(email, password, role);
     toast.success(`Welcome to Learnix! Account created as ${role.toUpperCase()}.`);

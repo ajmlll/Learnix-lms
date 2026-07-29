@@ -2,15 +2,16 @@ import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Filter, Star, X, BookOpen, SlidersHorizontal, ArrowUpDown } from 'lucide-react';
-import { COURSES, CATEGORIES } from '../../data/mockData';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import Input from '../../components/common/Input';
+import courseService from '../../services/courseService';
 
 export const CourseListing = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // API State
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,32 +21,41 @@ export const CourseListing = () => {
   const [sortBy, setSortBy] = useState('popular');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
+  React.useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [courseRes, categoryRes] = await Promise.all([
+          courseService.getCourses({
+            category: selectedCategory !== 'all' ? selectedCategory : undefined,
+            level: selectedLevel !== 'all' ? selectedLevel : undefined,
+            search: searchQuery || undefined,
+          }),
+          courseService.getCategories(),
+        ]);
+        setCourses(courseRes.courses || []);
+        setCategories(categoryRes || []);
+      } catch (err) {
+        console.error('[CourseListing API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [searchQuery, selectedCategory, selectedLevel]);
+
   // Filter & Sort Logic
   const filteredCourses = useMemo(() => {
-    return COURSES.filter((course) => {
-      // Search match
-      const matchesSearch =
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.category.toLowerCase().includes(searchQuery.toLowerCase());
-
-      // Category match
-      const matchesCategory = selectedCategory === 'all' || course.categoryId === selectedCategory;
-
-      // Level match
-      const matchesLevel = selectedLevel === 'all' || course.level === selectedLevel;
-
-      // Price match
-      const matchesPrice = course.price <= maxPrice;
-
-      return matchesSearch && matchesCategory && matchesLevel && matchesPrice;
+    return courses.filter((course) => {
+      const matchesPrice = (course.price || 0) <= maxPrice;
+      return matchesPrice;
     }).sort((a, b) => {
-      if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      return b.studentsEnrolled - a.studentsEnrolled; // 'popular'
+      if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+      if (sortBy === 'price-low') return (a.price || 0) - (b.price || 0);
+      if (sortBy === 'price-high') return (b.price || 0) - (a.price || 0);
+      return (b.studentsEnrolled || 0) - (a.studentsEnrolled || 0);
     });
-  }, [searchQuery, selectedCategory, selectedLevel, maxPrice, sortBy]);
+  }, [courses, maxPrice, sortBy]);
 
   const resetFilters = () => {
     setSearchQuery('');

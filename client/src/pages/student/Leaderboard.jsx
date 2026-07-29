@@ -3,13 +3,30 @@ import { Trophy, Crown, Zap, Flame, Award } from 'lucide-react';
 import LeaderboardRow from '../../components/gamification/LeaderboardRow';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
-import { MOCK_LEADERBOARD } from '../../data/mockData';
+import gamificationService from '../../services/gamificationService';
 
 export const Leaderboard = () => {
-  const [activeTab, setActiveTab] = useState('global'); // 'global' | 'course'
+  const [activeTab, setActiveTab] = useState('global');
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const topThree = MOCK_LEADERBOARD.slice(0, 3);
-  const remainingStudents = MOCK_LEADERBOARD;
+  React.useEffect(() => {
+    const fetchLeaderboard = async () => {
+      setIsLoading(true);
+      try {
+        const data = await gamificationService.getLeaderboard();
+        setLeaderboard(data || []);
+      } catch (err) {
+        console.error('[Leaderboard API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
+
+  const topThree = leaderboard.slice(0, 3);
+  const remainingStudents = leaderboard;
 
   return (
     <div className="space-y-8 font-sans">

@@ -14,20 +14,32 @@ import {
   Globe,
   Share2,
 } from 'lucide-react';
-import { COURSES } from '../../data/mockData';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import Modal from '../../components/common/Modal';
+import courseService from '../../services/courseService';
 
 export const CourseDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const course = COURSES.find((c) => c.id === id) || COURSES[0];
+  const [course, setCourse] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [openModuleIndex, setOpenModuleIndex] = useState(0);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [activePreviewLesson, setActivePreviewLesson] = useState(null);
+
+  React.useEffect(() => {
+    const fetchCourse = async () => {
+      setIsLoading(true);
+      try {
+        const data = await courseService.getCourseById(id);
+        setCourse(data);
+      } catch (err) {
+        console.error('[CourseDetails API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [id]);
 
   const toggleModule = (index) => {
     setOpenModuleIndex(openModuleIndex === index ? null : index);

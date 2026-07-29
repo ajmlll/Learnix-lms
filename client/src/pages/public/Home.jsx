@@ -25,7 +25,7 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 import Modal from '../../components/common/Modal';
-import { COURSES, CATEGORIES, TESTIMONIALS } from '../../data/mockData';
+import courseService from '../../services/courseService';
 import { useAuth } from '../../context/AuthContext';
 
 const iconMap = {
@@ -38,19 +38,37 @@ const iconMap = {
 };
 
 export const Home = () => {
-  const { switchRole } = useAuth();
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [courseRes, categoryRes] = await Promise.all([
+          courseService.getCourses({ limit: 6 }),
+          courseService.getCategories(),
+        ]);
+        setCourses(courseRes.courses || []);
+        setCategories(categoryRes || []);
+      } catch (err) {
+        console.error('[Home API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredCourses =
     selectedCategory === 'all'
-      ? COURSES
-      : COURSES.filter((c) => c.categoryId === selectedCategory);
+      ? courses
+      : courses.filter((c) => (c.category?._id || c.category) === selectedCategory);
 
   const handleQuickDemo = (role) => {
-    switchRole(role);
-    navigate(`/${role}/dashboard`);
+    navigate('/login');
   };
 
   return (

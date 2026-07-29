@@ -6,7 +6,7 @@ import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 import { Skeleton } from '../../components/common/Skeleton';
-import { CATEGORIES } from '../../data/mockData';
+import courseService from '../../services/courseService';
 import { toast } from 'react-toastify';
 
 const iconMap = {
@@ -19,30 +19,42 @@ const iconMap = {
 };
 
 export const ManageCategories = () => {
-  const [categories, setCategories] = useState(CATEGORIES);
+  const [categories, setCategories] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [catName, setCatName] = useState('');
   const [catColor, setCatColor] = useState('indigo');
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchCategories = async () => {
+    setIsLoading(true);
+    try {
+      const data = await courseService.getCategories();
+      setCategories(data || []);
+    } catch (err) {
+      console.error('[ManageCategories API Error]:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 450);
-    return () => clearTimeout(t);
+    fetchCategories();
   }, []);
 
-  const handleAddCategory = (e) => {
+  const handleAddCategory = async (e) => {
     e.preventDefault();
     if (!catName.trim()) return;
 
-    const newCat = {
-      id: `cat_${Date.now()}`,
-      name: catName,
-      count: 0,
-      iconName: 'Code',
-      color: catColor,
-    };
-
-    setCategories([...categories, newCat]);
+    try {
+      await courseService.createCategory(catName);
+      toast.success(`Category "${catName}" created!`);
+      setCatName('');
+      setIsAddModalOpen(false);
+      fetchCategories();
+    } catch (err) {
+      toast.error(err.message || 'Failed to create category');
+    }
+  };
     setCatName('');
     setIsAddModalOpen(false);
     toast.success(`🎉 Category "${catName}" added!`);

@@ -5,42 +5,43 @@ import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Input from '../../components/common/Input';
 import { TableRowSkeleton } from '../../components/common/Skeleton';
-import { ADMIN_USERS } from '../../data/mockData';
+import adminService from '../../services/adminService';
 import { toast } from 'react-toastify';
 
 export const ManageUsers = () => {
-  const [users, setUsers] = useState(ADMIN_USERS);
+  const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await adminService.getAllUsers({
+        role: selectedRole !== 'all' && selectedRole !== 'suspended' ? selectedRole : undefined,
+        search: searchTerm || undefined,
+      });
+      setUsers(res.data || []);
+    } catch (err) {
+      console.error('[ManageUsers API Error]:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(t);
-  }, []);
+    fetchUsers();
+  }, [searchTerm, selectedRole]);
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch =
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole =
-      selectedRole === 'all'
-        ? true
-        : selectedRole === 'suspended'
-        ? u.status === 'suspended'
-        : u.role === selectedRole;
-    return matchesSearch && matchesRole;
-  });
+  const filteredUsers = users;
 
-  const handleToggleStatus = (id, name, currentStatus) => {
-    const nextStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, status: nextStatus } : u))
-    );
-    if (nextStatus === 'suspended') {
-      toast.warn(`⚠️ User "${name}" suspended.`);
-    } else {
-      toast.success(`User "${name}" reactivated.`);
+  const handleToggleStatus = async (id, name) => {
+    try {
+      await adminService.suspendUser(id);
+      toast.warn(`User "${name}" updated.`);
+      fetchUsers();
+    } catch (err) {
+      toast.error('Failed to update user status');
     }
   };
 

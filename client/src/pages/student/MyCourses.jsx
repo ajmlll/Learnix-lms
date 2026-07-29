@@ -1,29 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, BookOpen, Award, LayoutGrid, List, PlayCircle, CheckCircle2 } from 'lucide-react';
-import { STUDENT_COURSES } from '../../data/mockData';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Badge from '../../components/common/Badge';
-import { CardSkeleton } from '../../components/common/Skeleton';
+import enrollmentService from '../../services/enrollmentService';
 
 export const MyCourses = () => {
   const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(t);
+    const fetchEnrolled = async () => {
+      setIsLoading(true);
+      try {
+        const data = await enrollmentService.getMyEnrolledCourses();
+        setCourses(data || []);
+      } catch (err) {
+        console.error('[Student MyCourses API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEnrolled();
   }, []);
 
-  const filteredCourses = STUDENT_COURSES.filter((sc) => {
+  const filteredCourses = courses.filter((sc) => {
     const matchesTab = activeTab === 'all' || sc.status === activeTab;
     const matchesSearch =
-      sc.course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sc.course.category.toLowerCase().includes(searchQuery.toLowerCase());
+      (sc.course?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (sc.course?.category?.name || sc.course?.category || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesTab && matchesSearch;
   });

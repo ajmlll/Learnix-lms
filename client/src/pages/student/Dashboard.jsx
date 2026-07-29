@@ -18,7 +18,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import Skeleton, { CardSkeleton } from '../../components/common/Skeleton';
-import { STUDENT_COURSES } from '../../data/mockData';
+import enrollmentService from '../../services/enrollmentService';
 
 const weeklyActivityData = [
   { day: 'Mon', hours: 1.5 },
@@ -33,11 +33,23 @@ const weeklyActivityData = [
 export const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 400);
-    return () => clearTimeout(timer);
+    const fetchEnrolled = async () => {
+      setIsLoading(true);
+      try {
+        const data = await enrollmentService.getMyEnrolledCourses();
+        setCourses(data || []);
+      } catch (err) {
+        console.error('[Student Dashboard API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEnrolled();
+  }, []);
   }, []);
 
   if (isLoading) {

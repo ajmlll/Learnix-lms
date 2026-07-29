@@ -16,11 +16,39 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import { PLATFORM_GROWTH, ADMIN_COURSES } from '../../data/mockData';
+import adminService from '../../services/adminService';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
-  const pendingApprovals = ADMIN_COURSES.filter((c) => c.status === 'pending_review');
+  const [stats, setStats] = React.useState({
+    totalUsers: 0,
+    totalCourses: 0,
+    totalRevenue: 0,
+    activeEnrollments: 0,
+  });
+  const [pendingCourses, setPendingCourses] = React.useState([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchAdminData = async () => {
+      setIsLoading(true);
+      try {
+        const [statsData, pendingData] = await Promise.all([
+          adminService.getDashboardStats(),
+          adminService.getPendingCourses(),
+        ]);
+        if (statsData) setStats(statsData);
+        if (pendingData?.data) setPendingCourses(pendingData.data);
+      } catch (err) {
+        console.error('[AdminDashboard API Error]:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAdminData();
+  }, []);
+
+  const pendingApprovals = pendingCourses;
 
   return (
     <div className="space-y-8 font-sans">
