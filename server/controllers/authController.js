@@ -233,3 +233,108 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get user's cart from MongoDB
+// @route   GET /api/auth/cart
+// @access  Private
+export const getUserCart = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: 'cart',
+      select: 'title slug thumbnail price discountPrice level instructor category',
+      populate: [
+        { path: 'instructor', select: 'name avatar' },
+        { path: 'category', select: 'name slug' },
+      ],
+    });
+
+    const validCart = (user?.cart || []).filter((item) => item != null);
+
+    res.status(200).json({
+      success: true,
+      data: validCart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Add course to user's cart in MongoDB
+// @route   POST /api/auth/cart
+// @access  Private
+export const addToUserCart = async (req, res, next) => {
+  try {
+    const { courseId } = req.body;
+    if (!courseId) {
+      return res.status(400).json({ success: false, message: 'Please provide a courseId' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $addToSet: { cart: courseId } },
+      { new: true }
+    ).populate({
+      path: 'cart',
+      select: 'title slug thumbnail price discountPrice level instructor category',
+      populate: [
+        { path: 'instructor', select: 'name avatar' },
+        { path: 'category', select: 'name slug' },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Course added to cart in database.',
+      data: user.cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Remove course from user's cart in MongoDB
+// @route   DELETE /api/auth/cart/:courseId
+// @access  Private
+export const removeFromUserCart = async (req, res, next) => {
+  try {
+    const { courseId } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $pull: { cart: courseId } },
+      { new: true }
+    ).populate({
+      path: 'cart',
+      select: 'title slug thumbnail price discountPrice level instructor category',
+      populate: [
+        { path: 'instructor', select: 'name avatar' },
+        { path: 'category', select: 'name slug' },
+      ],
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Course removed from cart in database.',
+      data: user.cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Clear user's cart in MongoDB
+// @route   DELETE /api/auth/cart
+// @access  Private
+export const clearUserCart = async (req, res, next) => {
+  try {
+    await User.findByIdAndUpdate(req.user._id, { $set: { cart: [] } });
+
+    res.status(200).json({
+      success: true,
+      message: 'Cart cleared in database.',
+      data: [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};

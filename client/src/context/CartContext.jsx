@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  addToCart as addToCartAction,
-  removeFromCart as removeFromCartAction,
-  clearCart as clearCartAction,
+  syncAddToCart,
+  syncRemoveFromCart,
+  syncClearCart,
   fetchEnrollments,
+  fetchDBCart,
 } from '../store/slices/cartSlice';
 
 const CartContext = createContext(null);
@@ -12,7 +13,7 @@ const CartContext = createContext(null);
 export const CartProvider = ({ children }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { cartItems, enrolledCourseIds, isEnrollmentsLoading } = useSelector(
+  const { cartItems, enrolledCourseIds, isEnrollmentsLoading, isCartLoading } = useSelector(
     (state) => state.cart
   );
 
@@ -20,9 +21,14 @@ export const CartProvider = ({ children }) => {
     dispatch(fetchEnrollments());
   }, [dispatch]);
 
+  const refetchCart = useCallback(() => {
+    dispatch(fetchDBCart());
+  }, [dispatch]);
+
   useEffect(() => {
     if (user) {
       dispatch(fetchEnrollments());
+      dispatch(fetchDBCart());
     }
   }, [dispatch, user]);
 
@@ -49,20 +55,20 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = useCallback(
     (course) => {
-      dispatch(addToCartAction(course));
+      dispatch(syncAddToCart(course));
     },
     [dispatch]
   );
 
   const removeFromCart = useCallback(
     (courseId) => {
-      dispatch(removeFromCartAction(courseId));
+      dispatch(syncRemoveFromCart(courseId));
     },
     [dispatch]
   );
 
   const clearCart = useCallback(() => {
-    dispatch(clearCartAction());
+    dispatch(syncClearCart());
   }, [dispatch]);
 
   const value = {
@@ -73,7 +79,9 @@ export const CartProvider = ({ children }) => {
     isInCart,
     isEnrolled,
     isEnrollmentsLoading,
+    isCartLoading,
     refetchEnrollments,
+    refetchCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

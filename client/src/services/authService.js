@@ -54,6 +54,30 @@ export const authService = {
     const response = await api.post(`/auth/reset-password/${token}`, { password });
     return response.data;
   },
+
+  // Get cart from MongoDB
+  getCart: async () => {
+    const response = await api.get('/auth/cart');
+    return response.data.data;
+  },
+
+  // Add course to cart in MongoDB
+  addToCart: async (courseId) => {
+    const response = await api.post('/auth/cart', { courseId });
+    return response.data.data;
+  },
+
+  // Remove course from cart in MongoDB
+  removeFromCart: async (courseId) => {
+    const response = await api.delete(`/auth/cart/${courseId}`);
+    return response.data.data;
+  },
+
+  // Clear cart in MongoDB
+  clearCart: async () => {
+    const response = await api.delete('/auth/cart');
+    return response.data.data;
+  },
 };
 
 export default authService;

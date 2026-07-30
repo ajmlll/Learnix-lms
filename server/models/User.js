@@ -51,6 +51,18 @@ const userSchema = new mongoose.Schema(
         ref: 'Course',
       },
     ],
+    cart: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+      },
+    ],
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Course',
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     xpPoints: {
