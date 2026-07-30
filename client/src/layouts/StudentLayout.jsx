@@ -253,7 +253,7 @@ export const StudentLayout = () => {
           <div className="my-2 border-t border-gray-100" />
 
           <button
-            onClick={() => { logout(); navigate('/login'); }}
+            onClick={() => { logout(); navigate('/'); }}
             aria-label={!isSidebarOpen ? 'Sign Out' : undefined}
             className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-[8px] transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-red-400"
           >
