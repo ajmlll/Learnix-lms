@@ -1,8 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import enrollmentService from '../../services/enrollmentService';
 
+// Helper to get saved cart from localStorage
+const getSavedCart = () => {
+  try {
+    const saved = localStorage.getItem('learnix_cart');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
 const initialState = {
-  cartItems: [],
+  cartItems: getSavedCart(),
   enrolledCourseIds: [],
   isEnrollmentsLoading: false,
   error: null,
@@ -17,10 +27,12 @@ export const fetchEnrollments = createAsyncThunk(
     }
     try {
       const enrollments = await enrollmentService.getMyCourses();
-      const ids = (enrollments || []).map((item) => {
-        const cId = item.course?.id || item.course?._id || item.course;
-        return cId ? cId.toString() : null;
-      }).filter(Boolean);
+      const ids = (enrollments || [])
+        .map((item) => {
+          const cId = item.course?.id || item.course?._id || item.course;
+          return cId ? cId.toString() : null;
+        })
+        .filter(Boolean);
 
       return Array.from(new Set(ids));
     } catch (err) {
@@ -46,6 +58,11 @@ const cartSlice = createSlice({
 
       if (!exists) {
         state.cartItems.push(course);
+        try {
+          localStorage.setItem('learnix_cart', JSON.stringify(state.cartItems));
+        } catch (e) {
+          console.error('[cartSlice] Failed to save cart to localStorage:', e);
+        }
       }
     },
     removeFromCart: (state, action) => {
@@ -55,9 +72,19 @@ const cartSlice = createSlice({
         const itemId = (item.id || item._id || item.course?.id || item.course?._id)?.toString();
         return itemId !== courseId;
       });
+      try {
+        localStorage.setItem('learnix_cart', JSON.stringify(state.cartItems));
+      } catch (e) {
+        console.error('[cartSlice] Failed to save cart to localStorage:', e);
+      }
     },
     clearCart: (state) => {
       state.cartItems = [];
+      try {
+        localStorage.removeItem('learnix_cart');
+      } catch (e) {
+        console.error('[cartSlice] Failed to clear cart from localStorage:', e);
+      }
     },
   },
   extraReducers: (builder) => {
