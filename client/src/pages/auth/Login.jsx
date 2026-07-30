@@ -19,9 +19,10 @@ export const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!email.trim()) {
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
       newErrors.email = 'Email address is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/\S+@\S+\.\S+/.test(cleanEmail)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
@@ -40,32 +41,34 @@ export const Login = () => {
     if (!validateForm()) return;
 
     try {
-      const loggedInUser = await login(email, password);
-      toast.success(`Welcome back, ${loggedInUser.name}!`);
-      
-      const userRole = loggedInUser.role || 'student';
+      const cleanEmail = email.trim().toLowerCase();
+      const loggedInUser = await login(cleanEmail, password);
+      toast.success(`Welcome back, ${loggedInUser?.name || 'User'}!`);
+
+      const userRole = loggedInUser?.role || 'student';
       const searchParams = new URLSearchParams(location.search);
       const redirectParam = searchParams.get('redirect');
       const fromPath = location.state?.from?.pathname || redirectParam || '';
-      
+
       const isPublicPath = fromPath.startsWith('/courses');
       const isRolePathMismatch = fromPath && !isPublicPath && !fromPath.startsWith(`/${userRole}`);
       const destination = (fromPath && (isPublicPath || !isRolePathMismatch)) ? fromPath : `/${userRole}/dashboard`;
 
       navigate(destination, { replace: true });
     } catch (err) {
-      toast.error(err.message || 'Invalid credentials. Please try again.');
+      const message = typeof err === 'string' ? err : (err?.message || 'Invalid credentials. Please try again.');
+      toast.error(message);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F8F9FC] font-sans">
       <div className="w-full max-w-md space-y-6">
-        
+
         {/* Header Branding */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-[10px] bg-[#4F46E5] flex items-center justify-center text-white font-bold shadow-md shadow-indigo-200">
+            <div className="w-10 h-10 rounded-[10px] bg-[#4F46E5] flex items-center justify-center text-white font-bold shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform">
               <GraduationCap className="w-6 h-6" />
             </div>
             <span className="font-heading font-extrabold text-2xl text-gray-900 tracking-tight">

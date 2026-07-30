@@ -19,7 +19,7 @@ import {
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
-import courseService from '../../services/courseService';
+import courseService, { getFullVideoUrl } from '../../services/courseService';
 import enrollmentService from '../../services/enrollmentService';
 import { toast } from 'react-toastify';
 
@@ -205,12 +205,124 @@ export const CoursePlayer = () => {
           {/* Main Video Player Screen Container */}
           <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 relative group shadow-2xl flex items-center justify-center">
             {activeLesson?.videoUrl ? (
-              <video
-                controls
-                src={activeLesson.videoUrl}
-                className="w-full h-full object-contain"
-                poster={course?.thumbnail}
-              />
+              (() => {
+                const src = activeLesson.videoUrl;
+                if (src instanceof File || src instanceof Blob) {
+                  const blobUrl = URL.createObjectURL(src);
+                  return <video src={blobUrl} controls autoPlay className="w-full h-full object-contain" poster={course?.thumbnail} />;
+                }
+
+                const url = getFullVideoUrl(src);
+                if (!url) return null;
+
+                // YouTube
+                if (url.includes('youtube.com/watch?v=')) {
+                  const id = url.split('v=')[1]?.split('&')[0];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                      title={activeLesson.title || 'Lesson Video'}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+                if (url.includes('youtu.be/')) {
+                  const id = url.split('youtu.be/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                      title={activeLesson.title || 'Lesson Video'}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Google Drive
+                if (url.includes('drive.google.com')) {
+                  let driveUrl = url;
+                  if (url.includes('/view')) {
+                    driveUrl = url.replace('/view', '/preview');
+                  } else if (!url.includes('/preview')) {
+                    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                      driveUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                    }
+                  }
+                  return (
+                    <iframe
+                      src={driveUrl}
+                      title={activeLesson.title || 'Lesson Video'}
+                      className="w-full h-full border-0"
+                      allow="autoplay"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Loom
+                if (url.includes('loom.com/share/')) {
+                  const id = url.split('loom.com/share/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://www.loom.com/embed/${id}`}
+                      title={activeLesson.title || 'Lesson Video'}
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Vimeo
+                if (url.includes('vimeo.com/')) {
+                  const id = url.split('vimeo.com/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://player.vimeo.com/video/${id}?autoplay=1`}
+                      title={activeLesson.title || 'Lesson Video'}
+                      className="w-full h-full border-0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Direct video formats (.mp4, .webm, .mov, Cloudinary, S3, blob, or /uploads/)
+                const isDirect =
+                  url.startsWith('blob:') ||
+                  url.endsWith('.mp4') ||
+                  url.endsWith('.webm') ||
+                  url.endsWith('.mov') ||
+                  url.includes('cloudinary.com') ||
+                  url.includes('amazonaws.com') ||
+                  url.includes('/video/upload/') ||
+                  url.includes('/uploads/');
+
+                if (isDirect) {
+                  return (
+                    <video
+                      controls
+                      src={url}
+                      className="w-full h-full object-contain"
+                      poster={course?.thumbnail}
+                    />
+                  );
+                }
+
+                // General web video link / embed fallback
+                return (
+                  <iframe
+                    src={url}
+                    title={activeLesson.title || 'Lesson Video'}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              })()
             ) : (
               <div className="text-center space-y-3 p-6">
                 <div className="w-16 h-16 rounded-full bg-[#4F46E5]/20 border border-[#4F46E5] text-[#4F46E5] flex items-center justify-center mx-auto animate-pulse">

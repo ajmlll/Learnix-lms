@@ -8,15 +8,18 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 600000, // 10 minutes timeout for video uploads
 });
 
-// Request Interceptor: Attach JWT Token from localStorage
+// Request Interceptor: Attach JWT Token from localStorage & handle FormData headers
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('learnix_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
     return config;
   },
@@ -32,9 +35,18 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || error.message || 'Something went wrong';
 
     if (error.response?.status === 401) {
-      localStorage.removeItem('learnix_token');
-      localStorage.removeItem('learnix_user');
-      window.dispatchEvent(new Event('learnix:unauthorized'));
+      const requestUrl = error.config?.url || '';
+      const isAuthEndpoint =
+        requestUrl.includes('/auth/login') ||
+        requestUrl.includes('/auth/register') ||
+        requestUrl.includes('/auth/forgot-password') ||
+        requestUrl.includes('/auth/reset-password');
+
+      if (!isAuthEndpoint) {
+        localStorage.removeItem('learnix_token');
+        localStorage.removeItem('learnix_user');
+        window.dispatchEvent(new Event('learnix:unauthorized'));
+      }
     } else if (error.response?.status >= 500) {
       toast.error('Server error. Please try again later.');
     }

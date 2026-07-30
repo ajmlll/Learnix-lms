@@ -143,35 +143,41 @@ export const StudentDashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {enrolledCourses.map((course) => (
-              <Card hoverable key={course.id} className="p-4 space-y-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full sm:w-28 h-20 rounded-[8px] object-cover shrink-0"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <Badge variant="primary" size="sm">{course.category}</Badge>
-                      <span className="text-xs font-mono font-bold text-[#4F46E5]">{course.progress}%</span>
-                    </div>
-                    <h3 className="text-sm font-bold font-heading text-gray-900 leading-snug">
-                      {course.title}
-                    </h3>
-                    <p className="text-xs text-gray-500">{course.nextLesson}</p>
-                  </div>
-                </div>
+            {enrolledCourses.map((course) => {
+              const progressVal = typeof course.progressPercent === 'number'
+                ? course.progressPercent
+                : (typeof course.progress === 'number' ? course.progress : 0);
 
-                {/* Progress bar */}
-                <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-[#4F46E5] h-full rounded-full transition-all duration-300"
-                    style={{ width: `${course.progress}%` }}
-                  />
-                </div>
-              </Card>
-            ))}
+              return (
+                <Card hoverable key={course.id} className="p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <img
+                      src={course.thumbnail}
+                      alt={course.title}
+                      className="w-full sm:w-28 h-20 rounded-[8px] object-cover shrink-0"
+                    />
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="primary" size="sm">{course.category}</Badge>
+                        <span className="text-xs font-mono font-bold text-[#4F46E5]">{progressVal}%</span>
+                      </div>
+                      <h3 className="text-sm font-bold font-heading text-gray-900 leading-snug">
+                        {course.title}
+                      </h3>
+                      <p className="text-xs text-gray-500">{course.nextLesson}</p>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#4F46E5] h-full rounded-full transition-all duration-300"
+                      style={{ width: `${progressVal}%` }}
+                    />
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         </div>
 

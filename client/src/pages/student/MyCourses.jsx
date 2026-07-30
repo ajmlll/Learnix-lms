@@ -141,46 +141,51 @@ export const MyCourses = () => {
       {/* Courses Display */}
       {filteredCourses.length > 0 ? (
         <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-          {filteredCourses.map((sc) => (
-            <Card hoverable key={sc.courseId || sc.course?._id || sc.course?.id} className="p-0 overflow-hidden flex flex-col justify-between">
-              <div>
-                <div className="relative h-44 w-full overflow-hidden">
-                  <img
-                    src={sc.course?.thumbnail || ''}
-                    alt={sc.course?.title || 'Course'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-2 left-2">
-                    <Badge variant={sc.status === 'completed' ? 'success' : 'primary'} size="sm">
-                      {sc.status === 'completed' ? 'COMPLETED' : 'IN PROGRESS'}
-                    </Badge>
-                  </div>
-                </div>
+          {filteredCourses.map((sc) => {
+            const progressVal = typeof sc.progressPercent === 'number'
+              ? sc.progressPercent
+              : (typeof sc.progress === 'number' ? sc.progress : 0);
 
-                <div className="p-5 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-gray-500 font-mono">
-                    <span>{sc.course?.category?.name || sc.course?.category || 'General'}</span>
-                    <span className="font-bold text-[#4F46E5]">{sc.progressPercent || sc.progress || 0}% Complete</span>
-                  </div>
-
-                  <h3 className="text-base font-bold font-heading text-gray-900 leading-snug line-clamp-2">
-                    {sc.course?.title}
-                  </h3>
-
-                  <p className="text-xs text-gray-500">
-                    Instructor: <strong className="text-gray-700">{sc.course?.instructor?.name || 'Learnix Faculty'}</strong>
-                  </p>
-
-                  <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-300 ${
-                        sc.status === 'completed' ? 'bg-emerald-500' : 'bg-[#4F46E5]'
-                      }`}
-                      style={{ width: `${sc.progressPercent || sc.progress || 0}%` }}
+            return (
+              <Card hoverable key={sc.courseId || sc.course?._id || sc.course?.id || sc._id} className="p-0 overflow-hidden flex flex-col justify-between">
+                <div>
+                  <div className="relative h-44 w-full overflow-hidden">
+                    <img
+                      src={sc.course?.thumbnail || ''}
+                      alt={sc.course?.title || 'Course'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute top-2 left-2">
+                      <Badge variant={sc.status === 'completed' ? 'success' : 'primary'} size="sm">
+                        {sc.status === 'completed' ? 'COMPLETED' : 'IN PROGRESS'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="p-5 space-y-3">
+                    <div className="flex items-center justify-between text-xs text-gray-500 font-mono">
+                      <span>{sc.course?.category?.name || sc.course?.category || 'General'}</span>
+                      <span className="font-bold text-[#4F46E5]">{progressVal}% Complete</span>
+                    </div>
+
+                    <h3 className="text-base font-bold font-heading text-gray-900 leading-snug line-clamp-2">
+                      {sc.course?.title}
+                    </h3>
+
+                    <p className="text-xs text-gray-500">
+                      Instructor: <strong className="text-gray-700">{sc.course?.instructor?.name || 'Learnix Faculty'}</strong>
+                    </p>
+
+                    <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          sc.status === 'completed' ? 'bg-emerald-500' : 'bg-[#4F46E5]'
+                        }`}
+                        style={{ width: `${progressVal}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
               <div className="px-5 py-3 bg-[#F8F9FC] border-t border-gray-100 flex items-center justify-between">
                 <span className="text-[11px] text-gray-400 font-mono">{sc.lastAccessed || 'Recently'}</span>
@@ -205,7 +210,8 @@ export const MyCourses = () => {
                 )}
               </div>
             </Card>
-          ))}
+          );
+        })}
         </div>
       ) : (
         <Card className="p-14 text-center space-y-4">

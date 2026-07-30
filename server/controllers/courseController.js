@@ -469,7 +469,15 @@ export const addLecture = async (req, res, next) => {
       });
     }
 
-    const finalVideoUrl = req.file ? req.file.path : videoUrl || '';
+    let finalVideoUrl = videoUrl || '';
+    if (req.file) {
+      if (req.file.path.startsWith('http://') || req.file.path.startsWith('https://')) {
+        finalVideoUrl = req.file.path;
+      } else {
+        const norm = req.file.path.replace(/\\/g, '/');
+        finalVideoUrl = norm.startsWith('/') ? norm : `/${norm}`;
+      }
+    }
 
     const newLecture = {
       title,
@@ -534,7 +542,12 @@ export const updateLecture = async (req, res, next) => {
     if (order !== undefined) lecture.order = order;
     if (isPreview !== undefined) lecture.isPreview = isPreview === 'true' || isPreview === true;
     if (req.file) {
-      lecture.videoUrl = req.file.path;
+      if (req.file.path.startsWith('http://') || req.file.path.startsWith('https://')) {
+        lecture.videoUrl = req.file.path;
+      } else {
+        const norm = req.file.path.replace(/\\/g, '/');
+        lecture.videoUrl = norm.startsWith('/') ? norm : `/${norm}`;
+      }
     } else if (videoUrl !== undefined) {
       lecture.videoUrl = videoUrl;
     }

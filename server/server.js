@@ -30,7 +30,12 @@ import { handleWebhook } from './controllers/paymentController.js';
 const app = express();
 
 // Security Headers
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Middlewares
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -48,8 +53,23 @@ app.post(
   handleWebhook
 );
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 app.use(express.json());
 app.use(cookieParser());
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    next();
+  },
+  express.static(path.join(__dirname, 'uploads'))
+);
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));

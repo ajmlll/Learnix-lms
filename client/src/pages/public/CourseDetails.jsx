@@ -20,7 +20,7 @@ import {
   ShoppingCart,
   ArrowRight,
 } from 'lucide-react';
-import courseService from '../../services/courseService';
+import courseService, { getFullVideoUrl } from '../../services/courseService';
 import enrollmentService from '../../services/enrollmentService';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -535,18 +535,148 @@ export const CourseDetails = () => {
       {/* Video Preview Modal */}
       <Modal
         isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
-        title={activePreviewLesson?.title || `Preview: ${course.title}`}
+        onClose={() => {
+          setIsPreviewModalOpen(false);
+          setActivePreviewLesson(null);
+        }}
+        title={activePreviewLesson?.title || `Preview: ${course?.title}`}
         size="lg"
       >
-        <div className="space-y-4 text-center">
-          <div className="h-64 bg-slate-900 rounded-[12px] flex items-center justify-center text-white space-y-2 flex-col">
-            <PlayCircle className="w-14 h-14 text-[#F59E0B] animate-pulse" />
-            <p className="text-xs text-slate-300">Sample video lesson playing...</p>
+        <div className="space-y-4">
+          <div className="aspect-video bg-black rounded-[12px] overflow-hidden shadow-lg flex items-center justify-center">
+            {activePreviewLesson?.videoUrl ? (
+              (() => {
+                const src = activePreviewLesson.videoUrl;
+                if (src instanceof File || src instanceof Blob) {
+                  const blobUrl = URL.createObjectURL(src);
+                  return <video src={blobUrl} controls autoPlay className="w-full h-full object-contain" />;
+                }
+
+                const url = getFullVideoUrl(src);
+                if (!url) return null;
+
+                // YouTube
+                if (url.includes('youtube.com/watch?v=')) {
+                  const id = url.split('v=')[1]?.split('&')[0];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                      title={activePreviewLesson.title || 'Video Preview'}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+                if (url.includes('youtu.be/')) {
+                  const id = url.split('youtu.be/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://www.youtube.com/embed/${id}?autoplay=1`}
+                      title={activePreviewLesson.title || 'Video Preview'}
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Google Drive
+                if (url.includes('drive.google.com')) {
+                  let driveUrl = url;
+                  if (url.includes('/view')) {
+                    driveUrl = url.replace('/view', '/preview');
+                  } else if (!url.includes('/preview')) {
+                    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                      driveUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+                    }
+                  }
+                  return (
+                    <iframe
+                      src={driveUrl}
+                      title={activePreviewLesson.title || 'Video Preview'}
+                      className="w-full h-full border-0"
+                      allow="autoplay"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Loom
+                if (url.includes('loom.com/share/')) {
+                  const id = url.split('loom.com/share/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://www.loom.com/embed/${id}`}
+                      title={activePreviewLesson.title || 'Video Preview'}
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Vimeo
+                if (url.includes('vimeo.com/')) {
+                  const id = url.split('vimeo.com/')[1]?.split('?')[0];
+                  return (
+                    <iframe
+                      src={`https://player.vimeo.com/video/${id}?autoplay=1`}
+                      title={activePreviewLesson.title || 'Video Preview'}
+                      className="w-full h-full border-0"
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                    />
+                  );
+                }
+
+                // Direct video formats (.mp4, .webm, .mov, Cloudinary, S3, blob, or /uploads/)
+                const isDirect =
+                  url.startsWith('blob:') ||
+                  url.endsWith('.mp4') ||
+                  url.endsWith('.webm') ||
+                  url.endsWith('.mov') ||
+                  url.includes('cloudinary.com') ||
+                  url.includes('amazonaws.com') ||
+                  url.includes('/video/upload/') ||
+                  url.includes('/uploads/');
+
+                if (isDirect) {
+                  return (
+                    <video
+                      src={url}
+                      controls
+                      autoPlay
+                      className="w-full h-full object-contain"
+                    >
+                      Your browser does not support HTML5 video.
+                    </video>
+                  );
+                }
+
+                // General web video link / embed fallback
+                return (
+                  <iframe
+                    src={url}
+                    title={activePreviewLesson.title || 'Video Preview'}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              })()
+            ) : (
+              <div className="text-center text-slate-400 p-6 space-y-2">
+                <PlayCircle className="w-10 h-10 mx-auto text-slate-500" />
+                <p className="text-xs">No video stream uploaded for this free preview lesson.</p>
+              </div>
+            )}
           </div>
-          <Button variant="primary" onClick={() => setIsPreviewModalOpen(false)}>
-            Close Video
-          </Button>
+          <div className="flex justify-end">
+            <Button variant="secondary" size="sm" onClick={() => setIsPreviewModalOpen(false)}>
+              Close Preview
+            </Button>
+          </div>
         </div>
       </Modal>
 

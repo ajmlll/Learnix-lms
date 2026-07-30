@@ -17,8 +17,10 @@ export const register = async (req, res, next) => {
       });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -31,8 +33,8 @@ export const register = async (req, res, next) => {
 
     // Create user
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: cleanEmail,
       password,
       role: userRole,
     });
@@ -57,8 +59,10 @@ export const login = async (req, res, next) => {
       });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
     // Find user by email and explicitly select password
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
     if (!user) {
       return res.status(401).json({
         success: false,

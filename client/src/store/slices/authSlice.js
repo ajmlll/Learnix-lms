@@ -41,7 +41,8 @@ export const loginUser = createAsyncThunk(
       localStorage.setItem('learnix_token', data.token);
       return { user: authenticatedUser, token: data.token };
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message || 'Login failed');
+      const message = typeof err === 'string' ? err : (err?.message || err?.response?.data?.message || 'Login failed');
+      return rejectWithValue(message);
     }
   }
 );
@@ -59,7 +60,8 @@ export const registerUser = createAsyncThunk(
       localStorage.setItem('learnix_token', data.token);
       return { user: authenticatedUser, token: data.token };
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message || 'Registration failed');
+      const message = typeof err === 'string' ? err : (err?.message || err?.response?.data?.message || 'Registration failed');
+      return rejectWithValue(message);
     }
   }
 );

@@ -1,8 +1,38 @@
 import api from './api';
 
+// Helper to convert relative video URLs to full accessible server URLs
+export const getFullVideoUrl = (url) => {
+  if (!url) return '';
+  if (url instanceof File || url instanceof Blob) {
+    return URL.createObjectURL(url);
+  }
+  const strUrl = String(url).trim();
+  if (strUrl.startsWith('http://') || strUrl.startsWith('https://') || strUrl.startsWith('blob:')) {
+    return strUrl;
+  }
+  if (strUrl.startsWith('/uploads/') || strUrl.startsWith('uploads/')) {
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const serverBase = apiBase.replace(/\/api\/?$/, '');
+    const cleanPath = strUrl.startsWith('/') ? strUrl : `/${strUrl}`;
+    return `${serverBase}${cleanPath}`;
+  }
+  return strUrl;
+};
+
 // Transform Mongoose course document to include aliases expected by frontend components
 const transformCourse = (course) => {
   if (!course) return null;
+
+  const sections = (course.sections || []).map((sec) => ({
+    ...sec,
+    id: sec._id || sec.id,
+    lectures: (sec.lectures || []).map((l) => ({
+      ...l,
+      id: l._id || l.id,
+      videoUrl: getFullVideoUrl(l.videoUrl || l.video),
+    })),
+  }));
+
   return {
     ...course,
     id: course._id || course.id,
@@ -11,22 +41,19 @@ const transformCourse = (course) => {
     studentsEnrolled: course.enrolledCount || course.studentsEnrolled || 0,
     originalPrice: course.price ? course.price * 1.5 : 0,
     categoryName: typeof course.category === 'object' ? course.category?.name : course.category,
-    curriculum: course.sections
-      ? course.sections.map((sec) => ({
-          id: sec._id || sec.id,
-          moduleTitle: sec.title,
-          duration: `${sec.lectures ? sec.lectures.reduce((acc, l) => acc + (l.duration || 0), 0) : 0} mins`,
-          lessons: sec.lectures
-            ? sec.lectures.map((l) => ({
-                id: l._id || l.id,
-                title: l.title,
-                duration: `${Math.floor((l.duration || 0) / 60)}:${(l.duration % 60 || 0).toString().padStart(2, '0')}`,
-                videoUrl: l.videoUrl,
-                isPreview: l.isPreview,
-              }))
-            : [],
-        }))
-      : [],
+    sections,
+    curriculum: sections.map((sec) => ({
+      id: sec.id,
+      moduleTitle: sec.title,
+      duration: `${sec.lectures ? sec.lectures.reduce((acc, l) => acc + (l.duration || 0), 0) : 0} mins`,
+      lessons: sec.lectures.map((l) => ({
+        id: l.id,
+        title: l.title,
+        duration: `${Math.floor((l.duration || 0) / 60)}:${(l.duration % 60 || 0).toString().padStart(2, '0')}`,
+        videoUrl: l.videoUrl,
+        isPreview: l.isPreview,
+      })),
+    })),
   };
 };
 
@@ -103,18 +130,12 @@ export const courseService = {
 
   // Lectures
   addLecture: async (courseId, sectionId, lectureData) => {
-    const isFormData = lectureData instanceof FormData;
-    const response = await api.post(`/courses/${courseId}/sections/${sectionId}/lectures`, lectureData, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
-    });
+    const response = await api.post(`/courses/${courseId}/sections/${sectionId}/lectures`, lectureData);
     return response.data;
   },
 
   updateLecture: async (courseId, sectionId, lectureId, lectureData) => {
-    const isFormData = lectureData instanceof FormData;
-    const response = await api.put(`/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}`, lectureData, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {},
-    });
+    const response = await api.put(`/courses/${courseId}/sections/${sectionId}/lectures/${lectureId}`, lectureData);
     return response.data;
   },
 

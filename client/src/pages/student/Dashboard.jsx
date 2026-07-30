@@ -88,7 +88,9 @@ export const Dashboard = () => {
     courseId: '',
   };
 
-  const progressVal = activeMissionCourse.progressPercent || activeMissionCourse.progress || 0;
+  const progressVal = typeof activeMissionCourse.progressPercent === 'number'
+    ? activeMissionCourse.progressPercent
+    : (typeof activeMissionCourse.progress === 'number' ? activeMissionCourse.progress : 0);
 
   return (
     <div className="space-y-8 font-sans">
@@ -195,7 +197,9 @@ export const Dashboard = () => {
               const cId = sc.courseId || sc.course?._id || sc.course?.id;
               const catName = typeof sc.course?.category === 'object' ? (sc.course?.category?.name || 'General') : (sc.course?.category || 'General');
               const courseTitle = sc.course?.title || 'Untitled Course';
-              const progressVal = sc.progressPercent || sc.progress || 0;
+              const progressVal = typeof sc.progressPercent === 'number'
+                ? sc.progressPercent
+                : (typeof sc.progress === 'number' ? sc.progress : 0);
 
               return (
                 <Card hoverable key={cId} className="p-4 space-y-3">
@@ -230,7 +234,7 @@ export const Dashboard = () => {
                       className={`h-full rounded-full transition-all duration-300 ${
                         sc.status === 'completed' ? 'bg-emerald-500' : 'bg-[#4F46E5]'
                       }`}
-                      style={{ width: `${sc.progress}%` }}
+                      style={{ width: `${progressVal}%` }}
                     />
                   </div>
 

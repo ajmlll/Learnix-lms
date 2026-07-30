@@ -23,7 +23,7 @@ export const validateResult = (req, res, next) => {
 // Authentication Validators
 export const validateRegister = [
   body('name').trim().notEmpty().withMessage('Name is required.'),
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address.'),
+  body('email').trim().toLowerCase().isEmail().withMessage('Please provide a valid email address.'),
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long.'),
@@ -31,13 +31,13 @@ export const validateRegister = [
 ];
 
 export const validateLogin = [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address.'),
+  body('email').trim().toLowerCase().isEmail().withMessage('Please provide a valid email address.'),
   body('password').notEmpty().withMessage('Password is required.'),
   validateResult,
 ];
 
 export const validateForgotPassword = [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email address.'),
+  body('email').trim().toLowerCase().isEmail().withMessage('Please provide a valid email address.'),
   validateResult,
 ];
 
