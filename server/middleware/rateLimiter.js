@@ -20,29 +20,29 @@ const getRedisStore = (prefix) => {
   return undefined; // Fallbacks to memory store if Redis unavailable
 };
 
-// Rate limiter for general auth routes (10 requests per 15 minutes)
+// Rate limiter for general auth routes (200 requests per 15 minutes)
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
   store: getRedisStore('auth'),
   message: {
     success: false,
-    message: 'Too many authentication requests from this IP. Please try again after 15 minutes.',
+    message: 'Too many requests from this IP. Please try again after 15 minutes.',
   },
 });
 
-// Stricter rate limiter for login route (5 attempts per 15 minutes)
+// Rate limiter for login route (30 attempts per 15 minutes)
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   store: getRedisStore('login'),
   message: {
     success: false,
-    message: 'Too many failed login attempts from this IP. Account access throttled for 15 minutes.',
+    message: 'Too many login attempts. Account access throttled for 15 minutes.',
   },
 });
 

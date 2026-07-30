@@ -22,15 +22,12 @@ import {
 
 const router = express.Router();
 
-// Apply rate limiter to all auth routes
-router.use(authRateLimiter);
-
 router.post('/register', validateRegister, register);
 router.post('/login', loginRateLimiter, validateLogin, login);
 router.get('/me', protect, getMe);
 router.post('/logout', logout);
-router.post('/forgot-password', validateForgotPassword, forgotPassword);
-router.post('/reset-password/:token', validateResetPassword, resetPassword);
+router.post('/forgot-password', authRateLimiter, validateForgotPassword, forgotPassword);
+router.post('/reset-password/:token', authRateLimiter, validateResetPassword, resetPassword);
 
 // Cart routes backed by MongoDB
 router.get('/cart', protect, getUserCart);
