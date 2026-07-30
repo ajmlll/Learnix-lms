@@ -83,9 +83,9 @@ export const Profile = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono bg-amber-50 border border-amber-100 text-[#D97706] px-3 py-1.5 rounded-full font-bold">
-          <Sparkles className="w-4 h-4 fill-[#F59E0B]" />
-          <span>{user?.xpPoints || 1450} XP • Rank #12</span>
+        <div className="flex items-center gap-2 text-xs font-mono bg-indigo-50 border border-indigo-100 text-[#4F46E5] px-3 py-1.5 rounded-full font-bold">
+          <Sparkles className="w-4 h-4 fill-[#4F46E5]" />
+          <span>Active Student</span>
         </div>
       </div>
 

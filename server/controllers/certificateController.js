@@ -2,6 +2,7 @@ import PDFDocument from 'pdfkit';
 import Certificate from '../models/Certificate.js';
 import Enrollment from '../models/Enrollment.js';
 import cloudinary from '../config/cloudinary.js';
+import { createNotification } from '../utils/createNotification.js';
 
 /**
  * Helper to generate PDF stream buffer using PDFKit
@@ -113,6 +114,15 @@ export const generateCertificateInternal = async (enrollmentId) => {
     pdfUrl: uploadUrl,
     issuedAt: issueDate,
   });
+
+  // Notify student of certificate generation
+  await createNotification(
+    enrollment.student._id,
+    'certificate_issued',
+    'Certificate Issued! 🏆',
+    `Congratulations! Your certificate for "${enrollment.course?.title || 'the course'}" has been generated.`,
+    `/student/certificates`
+  );
 
   return certificate;
 };

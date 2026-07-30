@@ -177,13 +177,6 @@
       "name": "Gamification & AI",
       "item": [
         {
-          "name": "Get Leaderboard (90s Cached)",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/gamification/leaderboard" }
-          }
-        },
-        {
           "name": "Generate AI Lecture Notes",
           "request": {
             "method": "POST",

@@ -1,14 +1,14 @@
 import React from 'react';
-import { Flame, ShieldCheck } from 'lucide-react';
+import { Flame } from 'lucide-react';
 
-export const StreakGauge = ({ streakDays = 7, targetDays = 14, shieldsCount = 2 }) => {
+export const StreakGauge = ({ streakDays = 1, targetDays = 14 }) => {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min((streakDays / targetDays) * 100, 100);
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="bg-gradient-to-b from-amber-50/90 to-amber-100/50 border border-amber-200 rounded-[12px] p-6 text-center space-y-4 font-sans shadow-soft relative overflow-hidden">
+    <div className="bg-gradient-to-b from-amber-50/90 to-amber-100/50 border border-amber-200 rounded-xl p-6 text-center space-y-4 font-sans shadow-soft relative overflow-hidden">
       
       {/* SVG Circular Ring */}
       <div className="relative w-32 h-32 mx-auto flex items-center justify-center">
@@ -49,12 +49,6 @@ export const StreakGauge = ({ streakDays = 7, targetDays = 14, shieldsCount = 2 
       <div className="space-y-1">
         <h4 className="text-sm font-bold font-heading text-gray-900">Active Learning Streak</h4>
         <p className="text-xs text-amber-800 font-medium">Keep learning daily to extend your flame!</p>
-      </div>
-
-      {/* Shields indicator */}
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 rounded-full text-xs font-semibold text-amber-900 shadow-xs">
-        <ShieldCheck className="w-4 h-4 text-emerald-500 fill-emerald-100" />
-        <span>{shieldsCount} Streak Shields Active</span>
       </div>
 
     </div>

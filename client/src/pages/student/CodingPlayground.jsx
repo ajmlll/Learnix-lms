@@ -7,9 +7,9 @@ import Badge from '../../components/common/Badge';
 import { toast } from 'react-toastify';
 
 const starterTemplates = {
-  javascript: `// React 19 / Modern JavaScript Playground\nfunction calculateWeeklyXP(streakDays, hoursCompleted) {\n  const baseXP = hoursCompleted * 50;\n  const streakBonus = streakDays * 15;\n  return baseXP + streakBonus;\n}\n\nconst totalXP = calculateWeeklyXP(7, 4.5);\nconsole.log("Calculated Student Weekly XP:", totalXP);`,
+  javascript: `// React 19 / Modern JavaScript Playground\nfunction calculateWeeklyHours(days, hoursPerDay) {\n  return days * hoursPerDay;\n}\n\nconst totalHours = calculateWeeklyHours(7, 1.5);\nconsole.log("Calculated Student Weekly Hours:", totalHours);`,
   python: `# Python AI Agent Prototype\ndef run_agent_workflow(query):\n    print(f"Executing AI Agent for query: '{query}'")\n    return {"status": "success", "tokens_used": 142}\n\nresult = run_agent_workflow("Summarize React 19 Server Actions")\nprint("Agent Output:", result)`,
-  typescript: `// TypeScript Interface Example\ninterface StudentProfile {\n  id: string;\n  name: string;\n  xpPoints: number;\n}\n\nconst alex: StudentProfile = {\n  id: "usr_101",\n  name: "Alex Morgan",\n  xpPoints: 1450\n};\n\nconsole.log(\`Student \${alex.name} has \${alex.xpPoints} XP\`);`,
+  typescript: `// TypeScript Interface Example\ninterface StudentProfile {\n  id: string;\n  name: string;\n  enrolledCount: number;\n}\n\nconst alex: StudentProfile = {\n  id: "usr_101",\n  name: "Alex Morgan",\n  enrolledCount: 4\n};\n\nconsole.log(\`Student \${alex.name} has \${alex.enrolledCount} enrolled courses\`);`,
 };
 
 export const CodingPlayground = () => {
@@ -42,7 +42,7 @@ export const CodingPlayground = () => {
       } else {
         setConsoleOutput(`[${language.toUpperCase()} Sandbox Output]:\nExecuting AI Agent for query: 'Summarize React 19 Server Actions'\nAgent Output: { status: 'success', tokens_used: 142 }\n\nExecution finished in 42ms.`);
       }
-      toast.success('⚡ Code executed! +15 XP earned');
+      toast.success('⚡ Code executed successfully!');
     } catch (err) {
       setConsoleOutput(`Uncaught Error: ${err.message}`);
     } finally {

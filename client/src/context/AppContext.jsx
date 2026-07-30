@@ -1,25 +1,36 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  toggleSidebar,
+  closeSidebar,
+  openSidebar,
+  setSearchQuery,
+  setNotificationCount,
+} from '../store/slices/uiSlice';
 
 const AppContext = createContext(null);
 
 export const AppProvider = ({ children }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [notificationCount, setNotificationCount] = useState(3);
+  const dispatch = useDispatch();
+  const { isSidebarOpen, searchQuery, notificationCount } = useSelector(
+    (state) => state.ui
+  );
 
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
-  const closeSidebar = () => setIsSidebarOpen(false);
-  const openSidebar = () => setIsSidebarOpen(true);
+  const handleToggleSidebar = () => dispatch(toggleSidebar());
+  const handleCloseSidebar = () => dispatch(closeSidebar());
+  const handleOpenSidebar = () => dispatch(openSidebar());
+  const handleSetSearchQuery = (q) => dispatch(setSearchQuery(q));
+  const handleSetNotificationCount = (count) => dispatch(setNotificationCount(count));
 
   const value = {
     isSidebarOpen,
-    toggleSidebar,
-    closeSidebar,
-    openSidebar,
+    toggleSidebar: handleToggleSidebar,
+    closeSidebar: handleCloseSidebar,
+    openSidebar: handleOpenSidebar,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSetSearchQuery,
     notificationCount,
-    setNotificationCount,
+    setNotificationCount: handleSetNotificationCount,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
@@ -32,3 +43,5 @@ export const useApp = () => {
   }
   return context;
 };
+
+export default AppContext;

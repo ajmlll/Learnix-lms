@@ -3,6 +3,7 @@ import Review from '../models/Review.js';
 import Course from '../models/Course.js';
 import Enrollment from '../models/Enrollment.js';
 import { invalidateCourseCache } from '../utils/cacheInvalidation.js';
+import { createNotification } from '../utils/createNotification.js';
 
 /**
  * Helper to recalculate course average rating and total rating count
@@ -92,6 +93,17 @@ export const createReview = async (req, res, next) => {
 
     // Recalculate rating & invalidate cache
     await updateCourseRating(courseId);
+
+    // Notify course instructor
+    if (course.instructor && course.instructor.toString() !== req.user._id.toString()) {
+      await createNotification(
+        course.instructor,
+        'review_reply',
+        'New Course Review Received',
+        `A student posted a ${rating}-star review on "${course.title}"`,
+        `/courses/${courseId}`
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -200,6 +212,37 @@ export const deleteReview = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Review deleted successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get current student's reviews (Paginated)
+// @route   GET /api/reviews/my-reviews
+// @access  Private (Student)
+export const getMyReviews = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+    const skip = (page - 1) * limit;
+
+    const total = await Review.countDocuments({ student: req.user._id });
+
+    const reviews = await Review.find({ student: req.user._id })
+      .populate('course', 'title thumbnail category instructor averageRating')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: reviews.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: reviews,
     });
   } catch (error) {
     next(error);

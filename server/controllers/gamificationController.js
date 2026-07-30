@@ -1,26 +1,4 @@
-import { XP, Streak, WeeklyGoal, Badge, UserBadge } from '../models/Gamification.js';
-import User from '../models/User.js';
-import redisClient from '../config/redis.js';
-
-// @desc    Get current user XP & Level
-// @route   GET /api/gamification/xp
-// @access  Private
-export const getXP = async (req, res, next) => {
-  try {
-    const xpRecords = await XP.find({ user: req.user._id }).lean();
-    const totalXP = xpRecords.reduce((acc, curr) => acc + (curr.points || 0), 0);
-    const level = Math.floor(Math.sqrt(totalXP / 100)) + 1;
-
-    res.status(200).json({
-      success: true,
-      totalXP,
-      level,
-      history: xpRecords.slice(-10).reverse(), // Last 10 XP activities
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+import { Streak, WeeklyGoal } from '../models/Gamification.js';
 
 // @desc    Get current user streak
 // @route   GET /api/gamification/streak
@@ -30,11 +8,27 @@ export const getStreak = async (req, res, next) => {
     let streak = await Streak.findOne({ user: req.user._id }).lean();
 
     if (!streak) {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       streak = {
-        currentStreak: 0,
-        longestStreak: 0,
+        currentStreak: 1,
+        longestStreak: 1,
         streakShields: 1,
+        lastActiveDate: now,
+        activeDates: [todayStr],
       };
+    } else if (!streak.activeDates || streak.activeDates.length === 0) {
+      // Backfill activeDates for existing streak records leading up to lastActiveDate
+      const activeDates = [];
+      const baseDate = streak.lastActiveDate ? new Date(streak.lastActiveDate) : new Date();
+      const count = Math.max(1, streak.currentStreak || 1);
+      for (let i = 0; i < count; i++) {
+        const d = new Date(baseDate);
+        d.setDate(baseDate.getDate() - i);
+        const dStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        activeDates.push(dStr);
+      }
+      streak.activeDates = activeDates;
     }
 
     res.status(200).json({
@@ -46,23 +40,69 @@ export const getStreak = async (req, res, next) => {
   }
 };
 
-// @desc    Get weekly goal
+// @desc    Use a streak freeze shield to protect streak
+// @route   POST /api/gamification/streak/use-shield
+// @access  Private
+export const useShield = async (req, res, next) => {
+  try {
+    let streak = await Streak.findOne({ user: req.user._id });
+
+    if (!streak) {
+      streak = await Streak.create({
+        user: req.user._id,
+        currentStreak: 1,
+        longestStreak: 1,
+        streakShields: 1,
+      });
+    }
+
+    if (streak.streakShields <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No streak shields available to activate.',
+      });
+    }
+
+    streak.streakShields -= 1;
+    await streak.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Streak Freeze Shield activated successfully for 24 hours.',
+      data: streak,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get weekly goal & history from database
 // @route   GET /api/gamification/weekly-goal
 // @access  Private
 export const getWeeklyGoal = async (req, res, next) => {
   try {
-    let goal = await WeeklyGoal.findOne({ user: req.user._id }).sort({ createdAt: -1 }).lean();
+    const history = await WeeklyGoal.find({ user: req.user._id })
+      .sort({ weekStartDate: -1 })
+      .lean();
+
+    let goal = history[0];
 
     if (!goal) {
+      const startOfWeek = new Date();
+      startOfWeek.setHours(0, 0, 0, 0);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
       goal = {
         targetMinutes: 150,
         completedMinutes: 0,
+        weekStartDate: startOfWeek,
       };
     }
 
     res.status(200).json({
       success: true,
       data: goal,
+      history: history.length > 0 ? history : [goal],
     });
   } catch (error) {
     next(error);
@@ -105,101 +145,6 @@ export const setWeeklyGoal = async (req, res, next) => {
       success: true,
       data: goal,
     });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get badges earned and available
-// @route   GET /api/gamification/badges
-// @access  Private
-export const getBadges = async (req, res, next) => {
-  try {
-    const allBadges = await Badge.find().lean();
-    const userBadges = await UserBadge.find({ user: req.user._id }).populate('badge').lean();
-
-    const earnedBadgeIds = userBadges.map((ub) => ub.badge._id.toString());
-
-    const result = allBadges.map((badge) => ({
-      ...badge,
-      isEarned: earnedBadgeIds.includes(badge._id.toString()),
-    }));
-
-    res.status(200).json({
-      success: true,
-      earnedCount: userBadges.length,
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get Leaderboard (Global + Cached 90s in Redis)
-// @route   GET /api/gamification/leaderboard
-// @access  Public
-export const getLeaderboard = async (req, res, next) => {
-  try {
-    const cacheKey = 'leaderboard:global';
-
-    // 1. Check Redis Cache
-    if (redisClient && redisClient.isOpen) {
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        res.setHeader('X-Cache', 'HIT');
-        const parsed = typeof cached === 'string' ? JSON.parse(cached) : cached;
-        return res.status(200).json(parsed);
-      }
-    }
-
-    res.setHeader('X-Cache', 'MISS');
-
-    // 2. Aggregate Top 10 Users by Total XP
-    const leaderboard = await XP.aggregate([
-      {
-        $group: {
-          _id: '$user',
-          totalXP: { $sum: '$points' },
-        },
-      },
-      { $sort: { totalXP: -1 } },
-      { $limit: 10 },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user',
-        },
-      },
-      { $unwind: '$user' },
-      {
-        $project: {
-          _id: 1,
-          totalXP: 1,
-          level: { $add: [{ $floor: { $sqrt: { $divide: ['$totalXP', 100] } } }, 1] },
-          name: '$user.name',
-          avatar: '$user.avatar',
-        },
-      },
-    ]);
-
-    const responsePayload = {
-      success: true,
-      data: leaderboard,
-    };
-
-    // 3. Cache result for 90 seconds
-    if (redisClient && redisClient.isOpen) {
-      const stringified = JSON.stringify(responsePayload);
-      if (redisClient.setEx) {
-        redisClient.setEx(cacheKey, 90, stringified).catch(() => {});
-      } else if (redisClient.set) {
-        redisClient.set(cacheKey, stringified, { ex: 90 }).catch(() => {});
-      }
-    }
-
-    res.status(200).json(responsePayload);
   } catch (error) {
     next(error);
   }

@@ -8,6 +8,7 @@ import { CardSkeleton } from '../../components/common/Skeleton';
 import { useCart } from '../../context/CartContext';
 import enrollmentService from '../../services/enrollmentService';
 import { toast } from 'react-toastify';
+import { getWishlist, removeFromWishlist } from '../../utils/wishlist';
 
 export const Wishlist = () => {
   const navigate = useNavigate();
@@ -17,16 +18,22 @@ export const Wishlist = () => {
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
   useEffect(() => {
-    // Read wishlist from localStorage or local state
-    const savedWishlist = JSON.parse(localStorage.getItem('learnix_wishlist') || '[]');
-    setWishlistItems(savedWishlist);
-    setIsLoading(false);
+    const updateWishlist = () => {
+      setWishlistItems(getWishlist());
+      setIsLoading(false);
+    };
+    updateWishlist();
+
+    window.addEventListener('wishlistUpdated', updateWishlist);
+    window.addEventListener('storage', updateWishlist);
+    return () => {
+      window.removeEventListener('wishlistUpdated', updateWishlist);
+      window.removeEventListener('storage', updateWishlist);
+    };
   }, []);
 
   const handleRemove = (id) => {
-    const updated = wishlistItems.filter((item) => (item.id || item._id) !== id);
-    setWishlistItems(updated);
-    localStorage.setItem('learnix_wishlist', JSON.stringify(updated));
+    removeFromWishlist(id);
     toast.info('Item removed from wishlist.');
   };
 

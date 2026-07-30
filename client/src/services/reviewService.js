@@ -24,6 +24,11 @@ export const reviewService = {
     const response = await api.delete(`/reviews/${id}`);
     return response.data;
   },
+  // Get reviews created by logged-in student
+  getMyReviews: async (params = {}) => {
+    const response = await api.get('/reviews/my-reviews', { params });
+    return response.data;
+  },
 };
 
 export default reviewService;

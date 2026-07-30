@@ -1,26 +1,4 @@
-import { XP, Streak } from '../models/Gamification.js';
-import { invalidateLeaderboardCache } from './cacheInvalidation.js';
-
-/**
- * Award XP points to a user and invalidate leaderboard cache
- */
-export const awardXP = async (userId, action, points) => {
-  try {
-    // 1. Record XP transaction
-    await XP.create({
-      user: userId,
-      action,
-      points,
-    });
-
-    // 2. Clear Redis leaderboard cache
-    await invalidateLeaderboardCache();
-
-    console.log(`[Gamification]: Awarded ${points} XP to user ${userId} for '${action}'`);
-  } catch (error) {
-    console.error('[awardXP Error]:', error.message);
-  }
-};
+import { Streak } from '../models/Gamification.js';
 
 /**
  * Update daily learning streak for a user with streak shield support
@@ -69,6 +47,12 @@ export const updateStreak = async (userId) => {
       }
     }
 
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (!streak.activeDates) streak.activeDates = [];
+    if (!streak.activeDates.includes(todayStr)) {
+      streak.activeDates.push(todayStr);
+    }
+
     streak.lastActiveDate = now;
     await streak.save();
     return streak;
@@ -78,6 +62,5 @@ export const updateStreak = async (userId) => {
 };
 
 export default {
-  awardXP,
   updateStreak,
 };

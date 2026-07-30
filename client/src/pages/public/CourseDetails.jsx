@@ -30,6 +30,7 @@ import { CardSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { toast } from 'react-toastify';
+import { isInWishlist, toggleWishlist } from '../../utils/wishlist';
 
 export const CourseDetails = () => {
   const { id } = useParams();
@@ -51,6 +52,7 @@ export const CourseDetails = () => {
       try {
         const data = await courseService.getCourseById(id);
         setCourse(data);
+        setIsWishlisted(isInWishlist(id || data?._id));
       } catch (err) {
         console.error('[CourseDetails API Error]:', err);
       } finally {
@@ -58,6 +60,12 @@ export const CourseDetails = () => {
       }
     };
     fetchCourse();
+
+    const handleWishlistUpdate = () => {
+      setIsWishlisted(isInWishlist(id));
+    };
+    window.addEventListener('wishlistUpdated', handleWishlistUpdate);
+    return () => window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
   }, [id]);
 
   const toggleModule = (index) => {
@@ -480,12 +488,14 @@ export const CourseDetails = () => {
                   {renderActionButton()}
                   
                   <Button
-                    variant="outline"
+                    variant={isWishlisted ? "primary" : "outline"}
                     size="md"
                     fullWidth
                     onClick={() => {
-                      setIsWishlisted(!isWishlisted);
-                      toast.info(isWishlisted ? 'Removed from Wishlist' : 'Saved to Wishlist!');
+                      if (!course) return;
+                      const added = toggleWishlist(course);
+                      setIsWishlisted(added);
+                      toast.info(added ? '❤️ Saved to Wishlist!' : 'Removed from Wishlist');
                     }}
                   >
                     {isWishlisted ? '❤️ Saved in Wishlist' : '🤍 Add to Wishlist'}

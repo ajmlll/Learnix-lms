@@ -32,7 +32,7 @@ export const AIQuiz = () => {
     const calculatedScore = Math.round((correctCount / MOCK_AI_QUIZ.questions.length) * 100);
     setScore(calculatedScore);
     setIsSubmitted(true);
-    toast.success(`🎉 Quiz Completed! You scored ${calculatedScore}% and earned +50 XP!`);
+    toast.success(`🎉 Quiz Completed! You scored ${calculatedScore}%!`);
   };
 
   const handleRetakeQuiz = () => {
@@ -52,7 +52,7 @@ export const AIQuiz = () => {
             Interactive AI Quiz Generator
           </h1>
           <p className="text-xs text-slate-400">
-            Test your understanding of the lecture. Earn +50 XP for scoring 80% or higher.
+            Test your understanding of the lecture and track your mastery.
           </p>
         </div>
 
@@ -69,7 +69,6 @@ export const AIQuiz = () => {
           <div className="w-12 h-12 rounded-full bg-[#F59E0B] text-white flex items-center justify-center font-bold text-xl mx-auto shadow-md">
             <Zap className="w-6 h-6 fill-white" />
           </div>
-          <Badge variant="amber" size="md">+50 XP REWARD UNLOCKED</Badge>
           <h2 className="text-2xl font-bold font-heading text-gray-900">Quiz Score: {score}%</h2>
           <p className="text-xs text-gray-600">
             {score >= 80 ? 'Outstanding work! You mastered the key concepts in this module.' : 'Good effort! Review the AI notes and retake the quiz to improve your score.'}

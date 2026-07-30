@@ -1,5 +1,6 @@
 import Discussion from '../models/Discussion.js';
 import { invalidateDiscussionCache } from '../utils/cacheInvalidation.js';
+import { createNotification } from '../utils/createNotification.js';
 
 // @desc    Create a Q&A discussion thread
 // @route   POST /api/discussions/course/:courseId
@@ -100,6 +101,17 @@ export const addReply = async (req, res, next) => {
 
     await discussion.save();
     await invalidateDiscussionCache(discussion.course);
+
+    // Notify original thread author if replied by someone else
+    if (discussion.user && discussion.user.toString() !== req.user._id.toString()) {
+      await createNotification(
+        discussion.user,
+        'discussion_reply',
+        'New Reply on Your Discussion',
+        `${req.user.name || 'A user'} replied to your post "${discussion.title || 'Discussion'}"`,
+        `/student/course/${discussion.course}/play`
+      );
+    }
 
     res.status(201).json({
       success: true,

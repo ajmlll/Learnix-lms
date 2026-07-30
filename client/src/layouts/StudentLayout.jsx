@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -8,7 +8,6 @@ import {
   Flame,
   Target,
   Award,
-  Trophy,
   Sparkles,
   HelpCircle,
   Code,
@@ -20,26 +19,49 @@ import {
   GraduationCap,
   LogOut,
   ShoppingBag,
+  Bell,
+  Star,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import Badge from '../components/common/Badge';
 import PageTransition from '../components/common/PageTransition';
+import notificationService from '../services/notificationService';
 
 export const StudentLayout = () => {
   const { user, logout, switchRole } = useAuth();
   const { isSidebarOpen, toggleSidebar } = useApp();
   const navigate = useNavigate();
 
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsPreview, setNotificationsPreview] = useState([]);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  const fetchUnread = async () => {
+    try {
+      const res = await notificationService.getNotifications({ limit: 5 });
+      setUnreadCount(res.unreadCount || 0);
+      setNotificationsPreview(res.data || []);
+    } catch (err) {
+      console.error('[Notification Poll Error]:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const navItems = [
     { label: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
     { label: 'Browse All Courses', path: '/courses', icon: Compass, badge: 'Catalog' },
     { label: 'My Learning', path: '/student/my-learning', icon: BookOpen, badge: 'Enrolled' },
-    { label: 'XP & Level Hub', path: '/student/xp', icon: Zap, isGamified: true, badge: 'LVL 5' },
+    { label: 'Notifications', path: '/student/notifications', icon: Bell, badge: unreadCount > 0 ? `${unreadCount}` : null },
+    { label: 'My Reviews', path: '/student/my-reviews', icon: Star },
     { label: 'Streak Heatmap', path: '/student/streak', icon: Flame, isGamified: true, badge: '7 Days' },
     { label: 'Weekly Target', path: '/student/weekly-goal', icon: Target },
-    { label: 'Achievements', path: '/student/achievements', icon: Award },
-    { label: 'Leaderboard', path: '/student/leaderboard', icon: Trophy, isGamified: true, badge: '#3' },
     { label: 'AI Summary Notes', path: '/student/ai-notes', icon: Sparkles },
     { label: 'AI MCQ Quizzes', path: '/student/ai-quiz', icon: HelpCircle },
     { label: 'Code Playground', path: '/student/playground', icon: Code },
@@ -85,19 +107,80 @@ export const StudentLayout = () => {
         <div className="flex items-center gap-3 sm:gap-4">
           <NavLink
             to="/student/streak"
-            className="hidden sm:flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs font-semibold hover:bg-amber-100/70 transition-colors focus-visible:ring-2 focus-visible:ring-amber-400"
-            aria-label={`${user?.streakDays || 7} day streak, ${user?.xpPoints || 1450} XP`}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 rounded-full text-xs font-semibold hover:bg-amber-100/70 transition-colors"
           >
-            <div className="flex items-center gap-1 text-[#F59E0B]">
-              <Flame className="w-4 h-4 fill-[#F59E0B]" aria-hidden="true" />
-              <span>{user?.streakDays || 7} Day Streak</span>
-            </div>
-            <span className="text-gray-300" aria-hidden="true">|</span>
-            <div className="flex items-center gap-1 text-[#D97706] font-mono font-bold">
-              <Zap className="w-3.5 h-3.5 fill-[#F59E0B]" aria-hidden="true" />
-              <span>{user?.xpPoints || 1450} XP</span>
-            </div>
+            <Flame className="w-4 h-4 fill-[#F59E0B] text-[#F59E0B]" aria-hidden="true" />
+            <span>{user?.streakDays || 7} Day Streak</span>
           </NavLink>
+
+          {/* Notification Bell Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors relative cursor-pointer"
+              title="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isNotifOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-soft-lg border border-gray-200 py-2 z-50">
+                <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between">
+                  <span className="text-xs font-bold font-heading text-gray-900">Notifications</span>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] bg-indigo-50 text-[#4F46E5] font-bold px-2 py-0.5 rounded-full font-mono">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+
+                <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+                  {notificationsPreview.length > 0 ? (
+                    notificationsPreview.map((n) => (
+                      <div
+                        key={n._id}
+                        onClick={() => {
+                          setIsNotifOpen(false);
+                          if (n.link) navigate(n.link);
+                          else navigate('/student/notifications');
+                        }}
+                        className={`p-3 text-left hover:bg-gray-50 cursor-pointer transition-colors ${
+                          !n.isRead ? 'bg-indigo-50/40' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold text-gray-900 line-clamp-1">{n.title}</p>
+                          {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5]" />}
+                        </div>
+                        <p className="text-[11px] text-gray-600 line-clamp-1 mt-0.5">{n.message}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-gray-400">
+                      No notifications yet
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-100 pt-2 px-4 text-center">
+                  <button
+                    onClick={() => {
+                      setIsNotifOpen(false);
+                      navigate('/student/notifications');
+                    }}
+                    className="text-xs font-bold text-[#4F46E5] hover:underline cursor-pointer"
+                  >
+                    View All Notifications →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <NavLink
             to="/student/profile"

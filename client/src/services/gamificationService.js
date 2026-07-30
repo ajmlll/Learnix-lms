@@ -1,22 +1,16 @@
 import api from './api';
 
 export const gamificationService = {
-  // Get user's total XP & level
-  getXP: async () => {
-    const response = await api.get('/gamification/xp');
-    return response.data;
-  },
-
   // Get learning streak
   getStreak: async () => {
     const response = await api.get('/gamification/streak');
     return response.data.data;
   },
 
-  // Get weekly learning goal
+  // Get weekly learning goal & history
   getWeeklyGoal: async () => {
     const response = await api.get('/gamification/weekly-goal');
-    return response.data.data;
+    return response.data;
   },
 
   // Set weekly target minutes
@@ -24,16 +18,9 @@ export const gamificationService = {
     const response = await api.post('/gamification/weekly-goal', { targetMinutes });
     return response.data.data;
   },
-
-  // Get badges
-  getBadges: async () => {
-    const response = await api.get('/gamification/badges');
-    return response.data;
-  },
-
-  // Get global leaderboard (90s Redis cached)
-  getLeaderboard: async () => {
-    const response = await api.get('/gamification/leaderboard');
+  // Use a streak freeze shield
+  useShield: async () => {
+    const response = await api.post('/gamification/streak/use-shield');
     return response.data.data;
   },
 };

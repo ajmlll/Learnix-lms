@@ -1,6 +1,8 @@
 import LiveClass from '../models/LiveClass.js';
 import Course from '../models/Course.js';
+import Enrollment from '../models/Enrollment.js';
 import { invalidateLiveClassCache } from '../utils/cacheInvalidation.js';
+import { createNotification } from '../utils/createNotification.js';
 
 // @desc    Schedule a Live Class
 // @route   POST /api/live-classes
@@ -48,6 +50,22 @@ export const scheduleLiveClass = async (req, res, next) => {
     });
 
     await invalidateLiveClassCache(courseId);
+
+    // Notify all enrolled students
+    try {
+      const enrollments = await Enrollment.find({ course: courseId }).select('student').lean();
+      for (const env of enrollments) {
+        await createNotification(
+          env.student,
+          'live_class_reminder',
+          'Live Masterclass Scheduled',
+          `New Live Class "${title}" scheduled for ${new Date(scheduledAt).toLocaleString()}`,
+          `/student/live-classes`
+        );
+      }
+    } catch (notifErr) {
+      console.error('[Live Class Notification Error]:', notifErr.message);
+    }
 
     res.status(201).json({
       success: true,

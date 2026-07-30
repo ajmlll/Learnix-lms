@@ -101,7 +101,6 @@ export const Dashboard = () => {
               <Flame className="w-3.5 h-3.5 fill-slate-900" />
               {user?.streakDays || 7} DAY STREAK
             </span>
-            <span className="text-indigo-200 text-xs font-mono">• {user?.xpPoints || 1450} XP Earned</span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold font-heading tracking-tight">

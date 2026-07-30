@@ -115,10 +115,10 @@ export const getDashboardStats = async (req, res, next) => {
 export const getPendingCourses = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 50);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
     const skip = (page - 1) * limit;
 
-    const query = { status: 'pending' };
+    const query = { status: { $in: ['pending', 'pending_review'] } };
 
     const total = await Course.countDocuments(query);
 
@@ -149,12 +149,23 @@ export const getPendingCourses = async (req, res, next) => {
 export const getAllCourses = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+    const limit = Math.min(parseInt(req.query.limit, 10) || 100, 200);
     const skip = (page - 1) * limit;
 
     const query = {};
     if (req.query.status && req.query.status !== 'all') {
-      query.status = req.query.status;
+      if (req.query.status === 'pending' || req.query.status === 'pending_review') {
+        query.status = { $in: ['pending', 'pending_review'] };
+      } else {
+        query.status = req.query.status;
+      }
+    }
+
+    if (req.query.search) {
+      query.$or = [
+        { title: { $regex: req.query.search, $options: 'i' } },
+        { subtitle: { $regex: req.query.search, $options: 'i' } },
+      ];
     }
 
     const total = await Course.countDocuments(query);

@@ -34,17 +34,16 @@ import Checkout from './pages/student/Checkout';
 import Profile from './pages/student/Profile';
 
 // Gamification & AI Student Pages (Phase 4)
-import XPDashboard from './pages/student/XPDashboard';
 import StreakDashboard from './pages/student/StreakDashboard';
 import WeeklyGoal from './pages/student/WeeklyGoal';
-import Achievements from './pages/student/Achievements';
-import Leaderboard from './pages/student/Leaderboard';
 import AINotes from './pages/student/AINotes';
 import AIQuiz from './pages/student/AIQuiz';
 import CodingPlayground from './pages/student/CodingPlayground';
 import LiveClasses from './pages/student/LiveClasses';
 import Certificates from './pages/student/Certificates';
 import Wishlist from './pages/student/Wishlist';
+import NotificationCenter from './pages/student/NotificationCenter';
+import MyReviews from './pages/student/MyReviews';
 
 // Instructor Studio Pages (Phase 5)
 import InstructorDashboard from './pages/instructor/InstructorDashboard';
@@ -108,21 +107,20 @@ export function App() {
           <Route path="/student/my-learning" element={<MyCourses />} />
           
           {/* Gamification & AI Features */}
-          <Route path="/student/xp" element={<XPDashboard />} />
           <Route path="/student/streak" element={<StreakDashboard />} />
           <Route path="/student/weekly-goal" element={<WeeklyGoal />} />
-          <Route path="/student/achievements" element={<Achievements />} />
-          <Route path="/student/leaderboard" element={<Leaderboard />} />
           
           {/* AI Tools & Code Sandbox */}
           <Route path="/student/ai-notes" element={<AINotes />} />
           <Route path="/student/ai-quiz" element={<AIQuiz />} />
           <Route path="/student/playground" element={<CodingPlayground />} />
           
-          {/* Live, Certificates, Wishlist */}
+          {/* Live, Certificates, Wishlist, Notifications, Reviews */}
           <Route path="/student/live-classes" element={<LiveClasses />} />
           <Route path="/student/certificates" element={<Certificates />} />
           <Route path="/student/wishlist" element={<Wishlist />} />
+          <Route path="/student/notifications" element={<NotificationCenter />} />
+          <Route path="/student/my-reviews" element={<MyReviews />} />
           
           <Route path="/student/cart" element={<Cart />} />
           <Route path="/student/checkout" element={<Checkout />} />

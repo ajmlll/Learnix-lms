@@ -92,19 +92,6 @@ export const invalidateLiveClassCache = async (courseId) => {
 };
 
 /**
- * Invalidate leaderboard cache
- */
-export const invalidateLeaderboardCache = async () => {
-  if (!redisClient || !redisClient.isOpen) return;
-
-  try {
-    await deleteKeysByPattern('*leaderboard*');
-  } catch (error) {
-    console.error('[invalidateLeaderboardCache Error]:', error.message);
-  }
-};
-
-/**
  * Invalidate admin dashboard stats cache
  */
 export const invalidateAdminStatsCache = async () => {
@@ -137,7 +124,6 @@ export default {
   invalidateReviewCache,
   invalidateDiscussionCache,
   invalidateLiveClassCache,
-  invalidateLeaderboardCache,
   invalidateAdminStatsCache,
   invalidateInstructorEarningsCache,
 };

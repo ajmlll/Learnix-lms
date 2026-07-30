@@ -1,8 +1,9 @@
 import Enrollment from '../models/Enrollment.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
-import { awardXP, updateStreak } from '../utils/gamificationService.js';
+import { updateStreak } from '../utils/gamificationService.js';
 import { generateCertificateInternal } from './certificateController.js';
+import { createNotification } from '../utils/createNotification.js';
 
 /**
  * Internal Helper: Create an enrollment record after payment success
@@ -44,6 +45,15 @@ export const createEnrollmentInternal = async (studentId, courseId) => {
   await User.findByIdAndUpdate(studentId, {
     $addToSet: { enrolledCourses: courseId },
   });
+
+  // Notify student of successful enrollment
+  await createNotification(
+    studentId,
+    'enrollment_success',
+    'Enrollment Confirmed! 🎉',
+    `You are now enrolled in "${course.title}". Happy learning!`,
+    `/student/course/${courseId}/play`
+  );
 
   return enrollment;
 };
@@ -157,9 +167,8 @@ export const updateProgress = async (req, res, next) => {
 
     enrollment.progressPercent = totalLectures > 0 ? Math.round((completedCount / totalLectures) * 100) : 0;
 
-    // Trigger Gamification XP & Streak updates on completion
+    // Trigger Gamification Streak update on completion
     if (isNewlyCompleted) {
-      await awardXP(req.user._id, 'lecture_completed', 50);
       await updateStreak(req.user._id);
     }
 

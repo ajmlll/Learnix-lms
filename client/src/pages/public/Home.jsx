@@ -19,6 +19,7 @@ import {
   Star,
   Quote,
   Search,
+  Heart,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
@@ -28,6 +29,8 @@ import Modal from '../../components/common/Modal';
 import { CardSkeleton } from '../../components/common/Skeleton';
 import courseService from '../../services/courseService';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
+import { isInWishlist, toggleWishlist } from '../../utils/wishlist';
 
 const iconMap = {
   Code,
@@ -45,6 +48,13 @@ export const Home = () => {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [wishlistTick, setWishlistTick] = useState(0);
+
+  React.useEffect(() => {
+    const handleUpdate = () => setWishlistTick((prev) => prev + 1);
+    window.addEventListener('wishlistUpdated', handleUpdate);
+    return () => window.removeEventListener('wishlistUpdated', handleUpdate);
+  }, []);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -236,23 +246,36 @@ export const Home = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map((course) => (
-            <Card hoverable key={course.id} className="p-0 overflow-hidden space-y-0 flex flex-col justify-between">
-              <div>
-                {/* Image header */}
-                <div className="relative h-48 w-full overflow-hidden">
-                  <img
-                    src={course.thumbnail}
-                    alt={course.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    {course.isBestseller && (
-                      <Badge variant="amber" size="sm">BESTSELLER</Badge>
-                    )}
-                    <Badge variant="primary" size="sm">{course.level}</Badge>
-                  </div>
-                </div>
+            {filteredCourses.map((course) => {
+              const wishlisted = isInWishlist(course.id || course._id);
+              return (
+                <Card hoverable key={course.id || course._id} className="p-0 overflow-hidden space-y-0 flex flex-col justify-between">
+                  <div>
+                    {/* Image header */}
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <img
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute top-3 left-3 flex gap-2">
+                        {course.isBestseller && (
+                          <Badge variant="amber" size="sm">BESTSELLER</Badge>
+                        )}
+                        <Badge variant="primary" size="sm">{course.level}</Badge>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const added = toggleWishlist(course);
+                          toast.info(added ? '❤️ Saved to Wishlist!' : 'Removed from Wishlist');
+                        }}
+                        className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-xs rounded-full hover:bg-white transition-all text-gray-700 shadow-xs cursor-pointer"
+                        title={wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                      >
+                        <Heart className={`w-4 h-4 transition-colors ${wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-600 hover:text-red-500'}`} />
+                      </button>
+                    </div>
 
                 {/* Body */}
                 <div className="p-5 space-y-3">
@@ -299,7 +322,8 @@ export const Home = () => {
                 </Button>
               </div>
             </Card>
-          ))}
+          );
+        })}
         </div>
         )}
       </section>

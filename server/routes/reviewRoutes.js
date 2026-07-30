@@ -4,6 +4,7 @@ import {
   getCourseReviews,
   updateReview,
   deleteReview,
+  getMyReviews,
 } from '../controllers/reviewController.js';
 import { protect } from '../middleware/auth.js';
 import { validateReview } from '../middleware/validator.js';
@@ -11,6 +12,8 @@ import { validateReview } from '../middleware/validator.js';
 import { cacheMiddleware } from '../middleware/cache.js';
 
 const router = express.Router();
+
+router.get('/my-reviews', protect, getMyReviews);
 
 router
   .route('/course/:courseId')
